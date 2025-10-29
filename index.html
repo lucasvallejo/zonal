@@ -1,0 +1,3782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>Sistema de Auditoría Zonal - Comedores</title>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- Leaflet for Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 222.2 84% 4.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 222.2 84% 4.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 222.2 84% 4.9%;
+      --primary: 221.2 83.2% 53.3%;
+      --primary-foreground: 210 40% 98%;
+      --secondary: 210 40% 96%;
+      --secondary-foreground: 222.2 84% 4.9%;
+      --muted: 210 40% 96%;
+      --muted-foreground: 215.4 16.3% 46.9%;
+      --accent: 210 40% 96%;
+      --accent-foreground: 222.2 84% 4.9%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 214.3 31.8% 91.4%;
+      --input: 214.3 31.8% 91.4%;
+      --ring: 221.2 83.2% 53.3%;
+      --success: 142.1 76.2% 36.3%;
+      --warning: 47.9 95.8% 53.1%;
+      --info: 204.4 83.9% 53.9%;
+      --radius: 0.5rem;
+    }
+
+    .dark {
+      --background: 222.2 84% 4.9%;
+      --foreground: 210 40% 98%;
+      --card: 222.2 84% 4.9%;
+      --card-foreground: 210 40% 98%;
+      --popover: 222.2 84% 4.9%;
+      --popover-foreground: 210 40% 98%;
+      --primary: 210 40% 98%;
+      --primary-foreground: 222.2 84% 4.9%;
+      --secondary: 217.2 32.6% 17.5%;
+      --secondary-foreground: 210 40% 98%;
+      --muted: 217.2 32.6% 17.5%;
+      --muted-foreground: 215 20.2% 65.1%;
+      --accent: 217.2 32.6% 17.5%;
+      --accent-foreground: 210 40% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 217.2 32.6% 17.5%;
+      --input: 217.2 32.6% 17.5%;
+      --ring: 212.7 26.8% 83.9%;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Layout */
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background-color: hsl(var(--card));
+      border-bottom: 1px solid hsl(var(--border));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 1.125rem;
+      color: hsl(var(--primary));
+    }
+
+    .logo img {
+      height: 32px;
+      width: 32px;
+      border-radius: var(--radius);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .user-avatar:hover {
+      border-color: hsl(var(--ring));
+      transform: scale(1.05);
+    }
+
+    .main-content {
+      flex: 1;
+      margin-top: 64px;
+      margin-bottom: 72px;
+      padding: 1rem;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background-color: hsl(var(--card));
+      border-top: 1px solid hsl(var(--border));
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 -1px 3px 0 rgb(0 0 0 / 0.1);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.5rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      color: hsl(var(--muted-foreground));
+      text-decoration: none;
+      min-width: 60px;
+      position: relative;
+    }
+
+    .nav-item.active {
+      color: hsl(var(--primary));
+      background-color: hsl(var(--accent));
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 2px;
+      background-color: hsl(var(--primary));
+      border-radius: 0 0 2px 2px;
+    }
+
+    .nav-item span {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .nav-item:hover:not(.active) {
+      background-color: hsl(var(--muted));
+    }
+
+    /* Components */
+    .card {
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      transition: box-shadow 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius);
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      outline: none;
+      text-decoration: none;
+      white-space: nowrap;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn:disabled::before {
+      display: none;
+    }
+
+    .btn-primary {
+      background-color: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: hsl(var(--primary) / 0.9);
+      box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: hsl(var(--secondary));
+      color: hsl(var(--secondary-foreground));
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: hsl(var(--secondary) / 0.8);
+    }
+
+    .btn-success {
+      background-color: hsl(var(--success));
+      color: hsl(var(--primary-foreground));
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background-color: hsl(var(--success) / 0.9);
+    }
+
+    .btn-destructive {
+      background-color: hsl(var(--destructive));
+      color: hsl(var(--destructive-foreground));
+    }
+
+    .btn-destructive:hover:not(:disabled) {
+      background-color: hsl(var(--destructive) / 0.9);
+    }
+
+    .btn-outline {
+      border: 1px solid hsl(var(--border));
+      background-color: transparent;
+      color: hsl(var(--foreground));
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      background-color: hsl(var(--accent));
+      border-color: hsl(var(--ring));
+    }
+
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .btn-lg {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+      font-size: 0.875rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      transition: all 0.2s;
+      font-size: 0.875rem;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: hsl(var(--ring));
+      box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+    }
+
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.5rem center;
+      background-repeat: no-repeat;
+      background-size: 1.5em 1.5em;
+      padding-right: 2.5rem;
+    }
+
+    .textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--success)));
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+
+    .stat-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      transform: translateY(-2px);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.75rem;
+      font-size: 1.25rem;
+    }
+
+    .stat-icon.primary {
+      background-color: hsl(var(--primary) / 0.1);
+      color: hsl(var(--primary));
+    }
+
+    .stat-icon.success {
+      background-color: hsl(var(--success) / 0.1);
+      color: hsl(var(--success));
+    }
+
+    .stat-icon.warning {
+      background-color: hsl(var(--warning) / 0.1);
+      color: hsl(var(--warning));
+    }
+
+    .stat-icon.info {
+      background-color: hsl(var(--info) / 0.1);
+      color: hsl(var(--info));
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: hsl(var(--muted-foreground));
+      font-weight: 500;
+    }
+
+    /* Wizard */
+    .wizard-container {
+      max-width: 100%;
+    }
+
+    .wizard-progress {
+      background-color: hsl(var(--secondary));
+      border-radius: 50px;
+      height: 8px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .wizard-progress::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .wizard-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--success)));
+      border-radius: 50px;
+      transition: width 0.3s ease;
+      position: relative;
+    }
+
+    .wizard-step-info {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .wizard-step-number {
+      font-size: 0.875rem;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 0.5rem;
+    }
+
+    .wizard-step-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+      margin-bottom: 0.5rem;
+    }
+
+    .wizard-step-description {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .wizard-content {
+      margin-bottom: 2rem;
+      min-height: 300px;
+    }
+
+    .wizard-actions {
+      display: flex;
+      gap: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid hsl(var(--border));
+    }
+
+    .wizard-actions .btn {
+      flex: 1;
+    }
+
+    .wizard-panel {
+      display: none;
+      opacity: 0;
+      transform: translateX(20px);
+      transition: all 0.3s ease;
+    }
+
+    .wizard-panel.active {
+      display: block;
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* List Items */
+    .list-item {
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .list-item:hover {
+      box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.1);
+      border-color: hsl(var(--ring));
+    }
+
+    .list-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .list-item-title {
+      font-weight: 600;
+      color: hsl(var(--foreground));
+    }
+
+    .list-item-content {
+      color: hsl(var(--muted-foreground));
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .list-item-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-success {
+      background-color: hsl(var(--success) / 0.1);
+      color: hsl(var(--success));
+      border: 1px solid hsl(var(--success) / 0.2);
+    }
+
+    .badge-warning {
+      background-color: hsl(var(--warning) / 0.1);
+      color: hsl(var(--warning));
+      border: 1px solid hsl(var(--warning) / 0.2);
+    }
+
+    .badge-destructive {
+      background-color: hsl(var(--destructive) / 0.1);
+      color: hsl(var(--destructive));
+      border: 1px solid hsl(var(--destructive) / 0.2);
+    }
+
+    .badge-info {
+      background-color: hsl(var(--info) / 0.1);
+      color: hsl(var(--info));
+      border: 1px solid hsl(var(--info) / 0.2);
+    }
+
+    .badge-secondary {
+      background-color: hsl(var(--secondary));
+      color: hsl(var(--secondary-foreground));
+    }
+
+    /* Camera and Photos */
+    .camera-container {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background-color: hsl(var(--muted));
+      margin-bottom: 1rem;
+      min-height: 200px;
+      border: 2px dashed hsl(var(--border));
+    }
+
+    #video {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    #canvas {
+      display: none;
+    }
+
+    .camera-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      font-size: 1.125rem;
+      font-weight: 500;
+    }
+
+    .camera-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .photo-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .photo-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid hsl(var(--border));
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .photo-item:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-item .delete-btn {
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: hsl(var(--destructive));
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .photo-item .delete-btn:hover {
+      opacity: 1;
+    }
+
+    .floating-camera-btn {
+      position: fixed;
+      bottom: calc(72px + 1rem);
+      right: 1rem;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background-color: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      z-index: 99;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .floating-camera-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 12px -2px rgb(0 0 0 / 0.2);
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Login */
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background-color: hsl(var(--card));
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1rem;
+      border-radius: var(--radius);
+    }
+
+    .login-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+      margin-bottom: 0.5rem;
+    }
+
+    .login-subtitle {
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Loading */
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid hsl(var(--border));
+      border-top-color: hsl(var(--primary));
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: hsl(var(--foreground));
+    }
+
+    /* Evaluation Grid */
+    .evaluation-grid {
+      display: grid;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .evaluation-item {
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 1rem;
+      transition: all 0.2s;
+    }
+
+    .evaluation-item:hover {
+      border-color: hsl(var(--ring));
+    }
+
+    .evaluation-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .evaluation-title {
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 0.25rem;
+    }
+
+    .evaluation-description {
+      font-size: 0.875rem;
+      color: hsl(var(--muted-foreground));
+      margin-bottom: 0.75rem;
+    }
+
+    .evaluation-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .evaluation-notes {
+      margin-top: 0.75rem;
+    }
+
+    /* Filter Section */
+    .filter-section {
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: calc(64px + 1rem);
+      right: 1rem;
+      background-color: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+      z-index: 1000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      max-width: 300px;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.success {
+      border-left: 4px solid hsl(var(--success));
+    }
+
+    .toast.error {
+      border-left: 4px solid hsl(var(--destructive));
+    }
+
+    .toast.warning {
+      border-left: 4px solid hsl(var(--warning));
+    }
+
+    /* Map */
+    .map-container {
+      height: 300px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid hsl(var(--border));
+      margin: 1rem 0;
+    }
+
+    /* Report Styles */
+    .report-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .report-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid hsl(var(--border));
+    }
+
+    .report-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: hsl(var(--foreground));
+      margin-bottom: 0.5rem;
+    }
+
+    .report-subtitle {
+      color: hsl(var(--muted-foreground));
+      font-size: 1rem;
+    }
+
+    .report-section {
+      margin-bottom: 2rem;
+    }
+
+    .report-section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid hsl(var(--border));
+    }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .report-item {
+      padding: 0.75rem;
+      background-color: hsl(var(--secondary));
+      border-radius: var(--radius);
+    }
+
+    .report-item-label {
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      font-size: 0.875rem;
+    }
+
+    .report-item-value {
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin-top: 0.25rem;
+    }
+
+    .report-photos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .report-photo {
+      aspect-ratio: 1;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid hsl(var(--border));
+    }
+
+    .report-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .main-content {
+        padding: 0.75rem;
+      }
+      
+      .card {
+        padding: 1rem;
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .wizard-actions {
+        flex-direction: column;
+      }
+      
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .evaluation-actions {
+        flex-direction: column;
+      }
+      
+      .evaluation-actions .btn {
+        width: 100%;
+      }
+      
+      .report-container {
+        padding: 1rem;
+      }
+      
+      .report-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Utilities */
+    .hidden { display: none !important; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+    .text-right { text-align: right; }
+    .mb-0 { margin-bottom: 0 !important; }
+    .mb-1 { margin-bottom: 0.5rem !important; }
+    .mb-2 { margin-bottom: 1rem !important; }
+    .mt-1 { margin-top: 0.5rem !important; }
+    .mt-2 { margin-top: 1rem !important; }
+    .w-full { width: 100%; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-4 { gap: 1rem; }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading hidden" id="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Login Screen -->
+  <div class="screen active" id="login-screen">
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-header">
+          <img src="https://comedor.foodservice.com.ar/img/image.png" alt="Logo" class="login-logo">
+          <h1 class="login-title">Auditoría Zonal</h1>
+          <p class="login-subtitle">Sistema profesional de auditoría de comedores</p>
+        </div>
+        
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-dni" class="form-label">DNI</label>
+            <input type="text" id="login-dni" class="form-control" placeholder="Ingrese su DNI" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="login-password" class="form-label">Contraseña</label>
+            <input type="password" id="login-password" class="form-control" placeholder="Ingrese su contraseña" required>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-lg w-full">
+            <i data-lucide="log-in"></i>
+            Ingresar al Sistema
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div class="screen" id="app-screen">
+    <div class="app">
+      <!-- Header -->
+      <header class="header">
+        <div class="logo">
+          <img src="https://comedor.foodservice.com.ar/img/image.png" alt="Logo">
+          <span>Auditoría Zonal</span>
+        </div>
+        
+        <div class="header-actions">
+          <div class="user-avatar" id="user-avatar" onclick="logout()">
+            <i data-lucide="user"></i>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Dashboard Screen -->
+        <div class="screen active" id="dashboard-screen">
+          <div class="card">
+            <h2 class="card-title">¡Hola, <span id="user-name">Usuario</span>!</h2>
+            <p style="color: hsl(var(--muted-foreground)); margin-bottom: 0;">
+              Bienvenido al sistema de auditoría zonal
+            </p>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon primary">
+                <i data-lucide="clipboard-check"></i>
+              </div>
+              <div class="stat-value" id="total-auditorias">0</div>
+              <div class="stat-label">Auditorías Realizadas</div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon success">
+                <i data-lucide="calendar-check"></i>
+              </div>
+              <div class="stat-value" id="auditorias-mes">0</div>
+              <div class="stat-label">Este Mes</div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon warning">
+                <i data-lucide="clock"></i>
+              </div>
+              <div class="stat-value" id="seguimientos-pendientes">0</div>
+              <div class="stat-label">Seguimientos</div>
+            </div>
+            
+            <div class="stat-card">
+              <div class="stat-icon info">
+                <i data-lucide="camera"></i>
+              </div>
+              <div class="stat-value" id="total-fotos">0</div>
+              <div class="stat-label">Fotos Tomadas</div>
+            </div>
+          </div>
+
+          <!-- Recent Audits -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Auditorías Recientes</h3>
+              <button class="btn btn-outline btn-sm" onclick="showScreen('historial')">
+                <i data-lucide="eye"></i>
+                Ver todas
+              </button>
+            </div>
+            
+            <div id="recent-audits-list">
+              <!-- Filled dynamically -->
+            </div>
+            
+            <div id="recent-audits-empty" class="empty-state hidden">
+              <div class="empty-state-icon">
+                <i data-lucide="clipboard-list"></i>
+              </div>
+              <div class="empty-state-title">No hay auditorías recientes</div>
+              <p>Las auditorías que realices aparecerán aquí</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nueva Auditoría Screen -->
+        <div class="screen" id="nueva-auditoria-screen">
+          <!-- Floating Camera Button -->
+          <button class="floating-camera-btn" id="floating-camera-btn" onclick="toggleCamera()" style="display: none;">
+            <i data-lucide="camera"></i>
+          </button>
+
+          <div class="wizard-container">
+            <!-- Progress Bar -->
+            <div class="wizard-progress">
+              <div class="wizard-progress-bar" id="wizard-progress" style="width: 12.5%"></div>
+            </div>
+
+            <!-- Step Info -->
+            <div class="wizard-step-info">
+              <div class="wizard-step-number" id="step-number">Paso 1 de 8</div>
+              <h2 class="wizard-step-title" id="step-title">Seleccionar Comedor</h2>
+              <p class="wizard-step-description" id="step-description">Elige el comedor que deseas auditar</p>
+            </div>
+
+            <!-- Wizard Content -->
+            <div class="wizard-content">
+              <!-- Step 1: Selección de Comedor -->
+              <div class="wizard-panel active" id="wizard-step-1">
+                <div class="form-group">
+                  <label for="comedor-select" class="form-label">Comedor</label>
+                  <select id="comedor-select" class="form-control form-select" required>
+                    <option value="">Seleccione un comedor</option>
+                  </select>
+                </div>
+                
+                <div id="resumen-comedor" class="card hidden">
+                  <!-- Filled dynamically -->
+                </div>
+              </div>
+
+              <!-- Step 2: Contacto del Comedor -->
+              <div class="wizard-panel" id="wizard-step-2">
+                <div class="card">
+                  <h3 class="card-title">Contacto del Comedor</h3>
+                  <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">
+                    Registra la información del contacto principal del comedor
+                  </p>
+                  
+                  <div class="form-group">
+                    <label class="form-label">¿Se pudo contactar con el responsable del comedor?</label>
+                    <div class="flex gap-2">
+                      <button type="button" class="btn btn-outline" data-contacto="si" onclick="updateContacto('si')">
+                        <i data-lucide="check"></i> Sí
+                      </button>
+                      <button type="button" class="btn btn-outline" data-contacto="no" onclick="updateContacto('no')">
+                        <i data-lucide="x"></i> No
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div id="contacto-details" class="hidden">
+                    <div class="form-group">
+                      <label for="contacto-nombre" class="form-label">Nombre del contacto</label>
+                      <input type="text" id="contacto-nombre" class="form-control" placeholder="Nombre completo">
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="contacto-cargo" class="form-label">Cargo</label>
+                      <input type="text" id="contacto-cargo" class="form-control" placeholder="Cargo o función">
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="contacto-observaciones" class="form-label">Observaciones del contacto</label>
+                      <textarea id="contacto-observaciones" class="form-control textarea" placeholder="Comentarios adicionales sobre el contacto..."></textarea>
+                    </div>
+                  </div>
+                  
+                  <div id="no-contacto-details" class="hidden">
+                    <div class="form-group">
+                      <label for="no-contacto-motivo" class="form-label">Motivo por el cual no se pudo contactar</label>
+                      <select id="no-contacto-motivo" class="form-control form-select">
+                        <option value="">Seleccione un motivo</option>
+                        <option value="ausente">Responsable ausente</option>
+                        <option value="ocupado">Responsable ocupado</option>
+                        <option value="no-disponible">No hay responsable disponible</option>
+                        <option value="otro">Otro motivo</option>
+                      </select>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="no-contacto-observaciones" class="form-label">Observaciones</label>
+                      <textarea id="no-contacto-observaciones" class="form-control textarea" placeholder="Detalles adicionales..."></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 3: Verificación de Personal -->
+              <div class="wizard-panel" id="wizard-step-3">
+                <div id="personal-list">
+                  <!-- Filled dynamically -->
+                </div>
+              </div>
+
+              <!-- Step 4: Verificación de Carnets -->
+              <div class="wizard-panel" id="wizard-step-4">
+                <div id="carnets-list">
+                  <!-- Filled dynamically -->
+                </div>
+              </div>
+
+              <!-- Step 5: Evaluación del Comedor -->
+              <div class="wizard-panel" id="wizard-step-5">
+                <div class="evaluation-grid" id="evaluacion-content">
+                  <!-- Filled dynamically -->
+                </div>
+              </div>
+
+              <!-- Step 6: Encuesta de Satisfacción -->
+              <div class="wizard-panel" id="wizard-step-6">
+                <div id="encuesta-content">
+                  <!-- Filled dynamically -->
+                </div>
+              </div>
+
+              <!-- Step 7: Observaciones Generales -->
+              <div class="wizard-panel" id="wizard-step-7">
+                <div class="card">
+                  <h3 class="card-title">Observaciones Generales</h3>
+                  <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">
+                    Registra observaciones adicionales sobre la auditoría
+                  </p>
+                  
+                  <div class="form-group">
+                    <label for="observaciones-positivas" class="form-label">Aspectos Positivos</label>
+                    <textarea id="observaciones-positivas" class="form-control textarea" placeholder="Menciona los aspectos positivos encontrados durante la auditoría..."></textarea>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="observaciones-mejoras" class="form-label">Oportunidades de Mejora</label>
+                    <textarea id="observaciones-mejoras" class="form-control textarea" placeholder="Describe las áreas que requieren mejoras..."></textarea>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="recomendaciones" class="form-label">Recomendaciones</label>
+                    <textarea id="recomendaciones" class="form-control textarea" placeholder="Proporciona recomendaciones específicas..."></textarea>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="seguimiento-requerido" class="form-label">¿Se requiere seguimiento?</label>
+                    <div class="flex gap-2">
+                      <button type="button" class="btn btn-outline" data-seguimiento="si" onclick="updateSeguimiento('si')">
+                        <i data-lucide="check"></i> Sí
+                      </button>
+                      <button type="button" class="btn btn-outline" data-seguimiento="no" onclick="updateSeguimiento('no')">
+                        <i data-lucide="x"></i> No
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div id="seguimiento-details" class="hidden">
+                    <div class="form-group">
+                      <label for="seguimiento-fecha" class="form-label">Fecha sugerida para seguimiento</label>
+                      <input type="date" id="seguimiento-fecha" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="seguimiento-motivo" class="form-label">Motivo del seguimiento</label>
+                      <textarea id="seguimiento-motivo" class="form-control textarea" placeholder="Explica por qué se requiere seguimiento..."></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 8: Finalizar -->
+              <div class="wizard-panel" id="wizard-step-8">
+                <div id="consumos-info" class="mb-2">
+                  <!-- Filled dynamically -->
+                </div>
+                
+                <div class="card">
+                  <h3 class="card-title">Galería de Fotos</h3>
+                  <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">
+                    Fotos tomadas durante la auditoría
+                  </p>
+                  
+                  <div class="camera-container" id="camera-container" style="display: none;">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas"></canvas>
+                    <div class="camera-overlay" id="camera-overlay">
+                      <div style="text-align: center;">
+                        <i data-lucide="camera" style="width: 3rem; height: 3rem; margin-bottom: 1rem;"></i>
+                        <br>
+                        <span>Cámara lista para tomar fotos</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="camera-controls" id="camera-controls" style="display: none;">
+                    <button class="btn btn-primary" onclick="tomarFoto()">
+                      <i data-lucide="camera"></i>
+                      Tomar Foto
+                    </button>
+                    <button class="btn btn-secondary" onclick="cerrarCamara()">
+                      <i data-lucide="x"></i>
+                      Cerrar Cámara
+                    </button>
+                  </div>
+                  
+                  <div class="photo-gallery" id="photo-gallery">
+                    <!-- Photos will be added here -->
+                  </div>
+                  
+                  <div id="no-photos-message" class="text-center" style="padding: 2rem; color: hsl(var(--muted-foreground));">
+                    <i data-lucide="camera" style="width: 3rem; height: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>No hay fotos tomadas aún</p>
+                    <p style="font-size: 0.875rem;">Usa el botón flotante de cámara para tomar fotos durante la auditoría</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Wizard Actions -->
+            <div class="wizard-actions">
+              <button class="btn btn-outline" id="prev-btn" onclick="prevStep()" style="display: none;">
+                <i data-lucide="arrow-left"></i>
+                Anterior
+              </button>
+              
+              <button class="btn btn-primary" id="next-btn" onclick="nextStep()">
+                Siguiente
+                <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historial Screen -->
+        <div class="screen" id="historial-screen">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Historial de Auditorías</h2>
+              <button class="btn btn-outline btn-sm" onclick="loadHistorialData()">
+                <i data-lucide="refresh-cw"></i>
+                Actualizar
+              </button>
+            </div>
+            
+            <div id="historial-list">
+              <!-- Filled dynamically -->
+            </div>
+            
+            <div id="historial-empty" class="empty-state hidden">
+              <div class="empty-state-icon">
+                <i data-lucide="history"></i>
+              </div>
+              <div class="empty-state-title">No hay auditorías</div>
+              <p>Las auditorías realizadas aparecerán aquí</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reportes Screen -->
+        <div class="screen" id="reportes-screen">
+          <div class="filter-section">
+            <h2 class="card-title" style="margin-bottom: 1rem;">Filtros de Búsqueda</h2>
+            
+            <div class="filter-grid">
+              <div class="form-group mb-0">
+                <label class="form-label">Fecha desde</label>
+                <input type="date" id="date-from" class="form-control">
+              </div>
+              
+              <div class="form-group mb-0">
+                <label class="form-label">Fecha hasta</label>
+                <input type="date" id="date-to" class="form-control">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Comedor</label>
+              <select id="reporte-comedor" class="form-control form-select">
+                <option value="">Todos los comedores</option>
+              </select>
+            </div>
+            
+            <button class="btn btn-primary w-full" onclick="buscarReportes()">
+              <i data-lucide="search"></i>
+              Buscar Reportes
+            </button>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Resultados</h3>
+              <span id="reportes-count" class="badge badge-info">0 resultados</span>
+            </div>
+            
+            <div id="reportes-list">
+              <!-- Filled dynamically -->
+            </div>
+            
+            <div id="reportes-empty" class="empty-state">
+              <div class="empty-state-icon">
+                <i data-lucide="search"></i>
+              </div>
+              <div class="empty-state-title">Buscar reportes</div>
+              <p>Selecciona los filtros y presiona "Buscar Reportes"</p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Bottom Navigation -->
+      <nav class="bottom-nav">
+        <a href="#dashboard" class="nav-item active" onclick="showScreen('dashboard')">
+          <i data-lucide="home"></i>
+          <span>Inicio</span>
+        </a>
+        
+        <a href="#nueva-auditoria" class="nav-item" onclick="showScreen('nueva-auditoria')">
+          <i data-lucide="plus-circle"></i>
+          <span>Nueva</span>
+        </a>
+        
+        <a href="#historial" class="nav-item" onclick="showScreen('historial')">
+          <i data-lucide="history"></i>
+          <span>Historial</span>
+        </a>
+        
+        <a href="#reportes" class="nav-item" onclick="showScreen('reportes')">
+          <i data-lucide="bar-chart-3"></i>
+          <span>Reportes</span>
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBLyOhPH9YaePUSi5fIMjaavlrQVJ2-UnY",
+      authDomain: "cantina-89c6a.firebaseapp.com",
+      databaseURL: "https://auditoria-zonal.firebaseio.com",
+      projectId: "cantina-89c6a",
+      storageBucket: "cantina-89c6a.appspot.com",
+      messagingSenderId: "353062217145",
+      appId: "1:353062217145:web:8849a49a1ec52077"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Global Variables
+    let currentUser = null;
+    let userOperations = [];
+    let currentStep = 1;
+    let cameraStream = null;
+    let wizardData = {
+      usuarioDNI: null,
+      usuarioNombre: null,
+      operacionId: null,
+      operacionName: null,
+      personal: [],
+      datosOperacion: null,
+      fotos: [],
+      lat: null,
+      lng: null,
+      fechaHora: null,
+      contactoRealizado: null,
+      contactoNombre: '',
+      contactoCargo: '',
+      contactoObservaciones: '',
+      noContactoMotivo: '',
+      noContactoObservaciones: '',
+      personalVerificado: {},
+      personalNombres: {},
+      carnetsVerificados: {},
+      evaluaciones: {},
+      evaluacionesNotas: {},
+      encuestas: {},
+      observacionesPositivas: '',
+      observacionesMejoras: '',
+      recomendaciones: '',
+      seguimientoRequerido: null,
+      seguimientoFecha: '',
+      seguimientoMotivo: ''
+    };
+
+    // Wizard steps configuration
+    const wizardSteps = [
+      {
+        title: "Seleccionar Comedor",
+        description: "Elige el comedor que deseas auditar"
+      },
+      {
+        title: "Contacto del Comedor",
+        description: "Registra la información del contacto principal"
+      },
+      {
+        title: "Verificar Personal",
+        description: "Confirma la presencia del personal"
+      },
+      {
+        title: "Revisar Carnets",
+        description: "Verifica el estado de los carnets sanitarios"
+      },
+      {
+        title: "Evaluación del Comedor",
+        description: "Evalúa las condiciones físicas y operativas"
+      },
+      {
+        title: "Encuesta de Satisfacción",
+        description: "Analiza los resultados de satisfacción"
+      },
+      {
+        title: "Observaciones Generales",
+        description: "Registra observaciones y recomendaciones"
+      },
+      {
+        title: "Finalizar Auditoría",
+        description: "Revisa las fotos y completa la auditoría"
+      }
+    ];
+
+    // Evaluation criteria for step 5
+    const evaluationCriteria = [
+      {
+        id: 'limpieza-general',
+        title: 'Limpieza General',
+        description: 'Estado de limpieza de pisos, paredes, techos y superficies',
+        category: 'higiene'
+      },
+      {
+        id: 'bandejas-utensilios',
+        title: 'Bandejas y Utensilios',
+        description: 'Estado de limpieza y conservación de bandejas, platos y cubiertos',
+        category: 'utensilios'
+      },
+      {
+        id: 'linea-servicio',
+        title: 'Línea de Servicio',
+        description: 'Organización, limpieza y funcionamiento de la línea de servicio',
+        category: 'servicio'
+      },
+      {
+        id: 'temperatura-alimentos',
+        title: 'Temperatura de Alimentos',
+        description: 'Mantenimiento de temperatura adecuada en alimentos calientes y fríos',
+        category: 'alimentos'
+      },
+      {
+        id: 'presentacion-alimentos',
+        title: 'Presentación de Alimentos',
+        description: 'Aspecto visual, frescura y presentación de los alimentos',
+        category: 'alimentos'
+      },
+      {
+        id: 'area-comensales',
+        title: 'Área de Comensales',
+        description: 'Limpieza y orden de mesas, sillas y área de consumo',
+        category: 'infraestructura'
+      },
+      {
+        id: 'equipos-funcionamiento',
+        title: 'Equipos y Funcionamiento',
+        description: 'Estado y funcionamiento de equipos de cocina y servicio',
+        category: 'equipos'
+      },
+      {
+        id: 'cumplimiento-protocolos',
+        title: 'Cumplimiento de Protocolos',
+        description: 'Seguimiento de protocolos de higiene y seguridad alimentaria',
+        category: 'protocolos'
+      },
+      {
+        id: 'atencion-personal',
+        title: 'Atención del Personal',
+        description: 'Calidad de atención, amabilidad y profesionalismo del personal',
+        category: 'servicio'
+      },
+      {
+        id: 'infraestructura-general',
+        title: 'Infraestructura General',
+        description: 'Estado general de instalaciones, iluminación y ventilación',
+        category: 'infraestructura'
+      }
+    ];
+
+    // Initialize App
+    document.addEventListener('DOMContentLoaded', function() {
+      setupEventListeners();
+      initializeLucideIcons();
+      hideLoading();
+    });
+
+    function initializeLucideIcons() {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    }
+
+    function showLoading() {
+      document.getElementById('loading').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').classList.add('hidden');
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info'}"></i>
+          <span>${message}</span>
+        </div>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      // Initialize icon
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+      
+      setTimeout(() => toast.classList.add('show'), 100);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          if (document.body.contains(toast)) {
+            document.body.removeChild(toast);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // Setup Event Listeners
+    function setupEventListeners() {
+      // Login form
+      document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        login();
+      });
+      
+      // Comedor select change
+      document.getElementById('comedor-select').addEventListener('change', function() {
+        wizardData.operacionId = this.value;
+        const selectedOption = this.options[this.selectedIndex];
+        wizardData.operacionName = selectedOption.textContent;
+        
+        if (wizardData.operacionId) {
+          cargarPersonal(wizardData.operacionId);
+          cargarDatosOperacion(wizardData.operacionName);
+          mostrarResumenComedor(wizardData.operacionId);
+        } else {
+          document.getElementById('resumen-comedor').classList.add('hidden');
+        }
+      });
+    }
+
+    // Login Function
+    function login() {
+      const dni = document.getElementById('login-dni').value;
+      const password = document.getElementById('login-password').value;
+      
+      if (!dni || !password) {
+        showToast('Por favor ingrese DNI y contraseña', 'error');
+        return;
+      }
+      
+      showLoading();
+      
+      // Call the authentication API
+      fetch(`https://auth.foodservice.com.ar/index_dev.php?type=login&user=${dni}&access_token=1234567`)
+        .then(response => response.json())
+        .then(data => {
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error('Usuario no encontrado');
+          }
+          
+          const userData = data[0];
+          
+          // Verify password
+          if (!userData.Password || !Array.isArray(userData.Password) || userData.Password.length === 0) {
+            throw new Error('Datos de contraseña no válidos');
+          }
+          
+          const userPassword = userData.Password[0].contrasena;
+          if (userPassword !== password) {
+            throw new Error('Contraseña incorrecta');
+          }
+          
+          // Create user object
+          currentUser = {
+            dni: userData.documento,
+            nombre: userData.nombre,
+            apellido: userData.apellido,
+            nombreCompleto: `${userData.nombre} ${userData.apellido}`,
+            legajo: userData.legajo,
+            permisos: userData.Permisos || []
+          };
+          
+          wizardData.usuarioDNI = currentUser.dni;
+          wizardData.usuarioNombre = currentUser.nombreCompleto;
+          
+          // Load user operations
+          cargarEmpresas(currentUser.dni);
+          
+          showApp();
+          
+          showToast(`¡Bienvenido, ${currentUser.nombreCompleto}!`, 'success');
+          
+        })
+        .catch(error => {
+          console.error('Error en login:', error);
+          showToast(error.message || 'Error al iniciar sesión', 'error');
+        })
+        .finally(() => {
+          hideLoading();
+        });
+    }
+
+    // Load user operations from API
+    function cargarEmpresas(dni) {
+      showLoading();
+      
+      fetch(`https://auth.foodservice.com.ar/index_dev.php?type=diagramafull_dni&dni=${dni}&access_token=1234567`)
+        .then(response => response.json())
+        .then(data => {
+          userOperations = [];
+          
+          if (Array.isArray(data)) {
+            data.forEach(operacion => {
+              userOperations.push({
+                id: operacion.operacion_id,
+                nombre: operacion.operacion_name,
+                empresa: operacion.empresa_name || 'Empresa no especificada',
+                direccion: operacion.direccion || 'Dirección no disponible',
+                operacionData: operacion
+              });
+            });
+          }
+          
+          // Populate comedor selects with user's operations
+          populateComedorSelect();
+          populateReporteComedorSelect();
+          
+          // Load dashboard data
+          loadDashboardData();
+          
+          hideLoading();
+          
+          if (userOperations.length === 0) {
+            showToast('No se encontraron comedores asignados', 'warning');
+          } else {
+            showToast(`${userOperations.length} comedor${userOperations.length !== 1 ? 'es' : ''} cargado${userOperations.length !== 1 ? 's' : ''}`, 'success');
+          }
+        })
+        .catch(error => {
+          console.error('Error loading comedores:', error);
+          hideLoading();
+          showToast('Error al cargar los comedores', 'error');
+          
+          // Initialize empty arrays to prevent errors
+          userOperations = [];
+          populateComedorSelect();
+          populateReporteComedorSelect();
+        });
+    }
+
+    function populateComedorSelect() {
+      const select = document.getElementById('comedor-select');
+      select.innerHTML = '<option value="">Seleccione un comedor</option>';
+      
+      userOperations.forEach(operacion => {
+        const option = document.createElement('option');
+        option.value = operacion.id;
+        option.textContent = operacion.nombre;
+        select.appendChild(option);
+      });
+    }
+
+    function populateReporteComedorSelect() {
+      const select = document.getElementById('reporte-comedor');
+      select.innerHTML = '<option value="">Todos los comedores</option>';
+      
+      userOperations.forEach(operacion => {
+        const option = document.createElement('option');
+        option.value = operacion.id;
+        option.textContent = operacion.nombre;
+        select.appendChild(option);
+      });
+    }
+
+    function showApp() {
+      document.getElementById('login-screen').classList.remove('active');
+      document.getElementById('app-screen').classList.add('active');
+      
+      // Update user display
+      document.getElementById('user-name').textContent = currentUser.nombre;
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    function logout() {
+      if (confirm('¿Está seguro que desea cerrar sesión?')) {
+        currentUser = null;
+        userOperations = [];
+        wizardData = {
+          usuarioDNI: null,
+          usuarioNombre: null,
+          operacionId: null,
+          operacionName: null,
+          personal: [],
+          datosOperacion: null,
+          fotos: [],
+          lat: null,
+          lng: null,
+          fechaHora: null,
+          contactoRealizado: null,
+          contactoNombre: '',
+          contactoCargo: '',
+          contactoObservaciones: '',
+          noContactoMotivo: '',
+          noContactoObservaciones: '',
+          personalVerificado: {},
+          personalNombres: {},
+          carnetsVerificados: {},
+          evaluaciones: {},
+          evaluacionesNotas: {},
+          encuestas: {},
+          observacionesPositivas: '',
+          observacionesMejoras: '',
+          recomendaciones: '',
+          seguimientoRequerido: null,
+          seguimientoFecha: '',
+          seguimientoMotivo: ''
+        };
+        
+        document.getElementById('app-screen').classList.remove('active');
+        document.getElementById('login-screen').classList.add('active');
+        
+        // Reset forms
+        document.getElementById('login-form').reset();
+        
+        showToast('Sesión cerrada correctamente', 'success');
+      }
+    }
+
+    // Navigation Functions
+    function showScreen(screenName) {
+      // Hide all screens within main content
+      const screens = document.querySelectorAll('.main-content .screen');
+      screens.forEach(screen => screen.classList.remove('active'));
+      
+      // Show selected screen
+      document.getElementById(screenName + '-screen').classList.add('active');
+      
+      // Update navigation
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => item.classList.remove('active'));
+      
+      const activeNav = document.querySelector(`[onclick="showScreen('${screenName}')"]`);
+      if (activeNav) {
+        activeNav.classList.add('active');
+      }
+      
+      // Load screen-specific data
+      if (screenName === 'historial') {
+        loadHistorialData();
+      } else if (screenName === 'reportes') {
+        loadReportesScreen();
+      } else if (screenName === 'nueva-auditoria') {
+        resetWizard();
+      } else if (screenName === 'dashboard') {
+        loadDashboardData();
+      }
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    // Dashboard Functions
+    function loadDashboardData() {
+      if (!currentUser) return;
+      
+      // Get user's operation IDs
+      const userOperationIds = userOperations.map(op => op.id);
+      
+      database.ref('auditorias').orderByChild('usuarioDNI').equalTo(currentUser.dni).once('value')
+        .then(snapshot => {
+          const auditorias = snapshot.val() || {};
+          
+          // Filter auditorias by user's operations
+          const userAuditorias = Object.keys(auditorias)
+            .filter(key => userOperationIds.includes(auditorias[key].operacionId))
+            .map(key => ({ id: key, ...auditorias[key] }));
+          
+          updateDashboardStats(userAuditorias);
+          updateRecentAudits(userAuditorias);
+        })
+        .catch(error => {
+          console.error('Error loading dashboard data:', error);
+        });
+    }
+
+    function updateDashboardStats(auditorias) {
+      const totalAuditorias = auditorias.length;
+      
+      // Auditorías este mes
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const auditoriasEsteMes = auditorias.filter(auditoria => {
+        const fecha = new Date(auditoria.fechaHora);
+        return fecha.getMonth() === currentMonth && fecha.getFullYear() === currentYear;
+      }).length;
+      
+      // Seguimientos pendientes
+      const seguimientosPendientes = auditorias.filter(auditoria => 
+        auditoria.seguimientoRequerido === 'si'
+      ).length;
+      
+      // Total fotos
+      const totalFotos = auditorias.reduce((total, auditoria) => {
+        return total + (auditoria.fotos ? auditoria.fotos.length : 0);
+      }, 0);
+      
+      // Update DOM
+      document.getElementById('total-auditorias').textContent = totalAuditorias;
+      document.getElementById('auditorias-mes').textContent = auditoriasEsteMes;
+      document.getElementById('seguimientos-pendientes').textContent = seguimientosPendientes;
+      document.getElementById('total-fotos').textContent = totalFotos;
+    }
+
+    function updateRecentAudits(auditorias) {
+      const recentAudits = auditorias
+        .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))
+        .slice(0, 5);
+      
+      const container = document.getElementById('recent-audits-list');
+      const emptyState = document.getElementById('recent-audits-empty');
+      
+      if (recentAudits.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      container.innerHTML = recentAudits.map(auditoria => {
+        const fecha = new Date(auditoria.fechaHora).toLocaleDateString('es-ES');
+        const operacion = userOperations.find(op => op.id === auditoria.operacionId);
+        const operacionNombre = operacion ? operacion.nombre : 'Comedor no encontrado';
+        
+        return `
+          <div class="list-item">
+            <div class="list-item-header">
+              <div class="list-item-title">${operacionNombre}</div>
+              <span class="badge badge-info">${fecha}</span>
+            </div>
+            <div class="list-item-content">
+              Auditoría realizada por ${auditoria.usuarioNombre}
+            </div>
+            <div class="list-item-actions">
+              <button class="btn btn-outline btn-sm" onclick="verAuditoria('${auditoria.id}')">
+                <i data-lucide="eye"></i>
+                Ver detalles
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    // Wizard Functions
+    function resetWizard() {
+      currentStep = 1;
+      
+      // Reset wizard data (keep user info)
+      const userDNI = wizardData.usuarioDNI;
+      const userNombre = wizardData.usuarioNombre;
+      
+      wizardData = {
+        usuarioDNI: userDNI,
+        usuarioNombre: userNombre,
+        operacionId: null,
+        operacionName: null,
+        personal: [],
+        datosOperacion: null,
+        fotos: [],
+        lat: null,
+        lng: null,
+        fechaHora: null,
+        contactoRealizado: null,
+        contactoNombre: '',
+        contactoCargo: '',
+        contactoObservaciones: '',
+        noContactoMotivo: '',
+        noContactoObservaciones: '',
+        personalVerificado: {},
+        personalNombres: {},
+        carnetsVerificados: {},
+        evaluaciones: {},
+        evaluacionesNotas: {},
+        encuestas: {},
+        observacionesPositivas: '',
+        observacionesMejoras: '',
+        recomendaciones: '',
+        seguimientoRequerido: null,
+        seguimientoFecha: '',
+        seguimientoMotivo: ''
+      };
+      
+      // Reset form elements
+      document.getElementById('comedor-select').value = '';
+      document.getElementById('resumen-comedor').classList.add('hidden');
+      
+      // Reset contact buttons
+      document.querySelectorAll('[data-contacto]').forEach(btn => {
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline');
+      });
+      document.getElementById('contacto-details').classList.add('hidden');
+      document.getElementById('no-contacto-details').classList.add('hidden');
+      
+      // Reset seguimiento buttons
+      document.querySelectorAll('[data-seguimiento]').forEach(btn => {
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline');
+      });
+      document.getElementById('seguimiento-details').classList.add('hidden');
+      
+      // Clear photo gallery
+      document.getElementById('photo-gallery').innerHTML = '';
+      document.getElementById('no-photos-message').style.display = 'block';
+      
+      // Close camera if open
+      cerrarCamara();
+      
+      updateWizardUI();
+    }
+
+    function updateWizardUI() {
+      // Update progress bar
+      const progress = (currentStep / wizardSteps.length) * 100;
+      document.getElementById('wizard-progress').style.width = progress + '%';
+      
+      // Update step info
+      document.getElementById('step-number').textContent = `Paso ${currentStep} de ${wizardSteps.length}`;
+      document.getElementById('step-title').textContent = wizardSteps[currentStep - 1].title;
+      document.getElementById('step-description').textContent = wizardSteps[currentStep - 1].description;
+      
+      // Show/hide panels
+      document.querySelectorAll('.wizard-panel').forEach((panel, index) => {
+        if (index + 1 === currentStep) {
+          panel.classList.add('active');
+        } else {
+          panel.classList.remove('active');
+        }
+      });
+      
+      // Update buttons
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      
+      if (currentStep === 1) {
+        prevBtn.style.display = 'none';
+      } else {
+        prevBtn.style.display = 'flex';
+      }
+      
+      if (currentStep === wizardSteps.length) {
+        nextBtn.innerHTML = '<i data-lucide="check"></i> Finalizar Auditoría';
+      } else {
+        nextBtn.innerHTML = 'Siguiente <i data-lucide="arrow-right"></i>';
+      }
+      
+      // Show/hide floating camera button
+      const floatingBtn = document.getElementById('floating-camera-btn');
+      if (currentStep >= 3 && currentStep <= 8) {
+        floatingBtn.style.display = 'flex';
+      } else {
+        floatingBtn.style.display = 'none';
+      }
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    function nextStep() {
+      if (!validateCurrentStep()) {
+        return;
+      }
+      
+      if (currentStep < wizardSteps.length) {
+        currentStep++;
+        updateWizardUI();
+        
+        // Load step-specific content
+        if (currentStep === 3) {
+          loadPersonalStep();
+        } else if (currentStep === 4) {
+          loadCarnetsStep();
+        } else if (currentStep === 5) {
+          loadEvaluacionStep();
+        } else if (currentStep === 6) {
+          loadEncuestaStep();
+        } else if (currentStep === 8) {
+          loadFinalizarStep();
+        }
+      } else {
+        // Finalizar auditoría
+        finalizarAuditoria();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateWizardUI();
+      }
+    }
+
+    function validateCurrentStep() {
+      switch (currentStep) {
+        case 1:
+          if (!wizardData.operacionId) {
+            showToast('Por favor seleccione un comedor', 'error');
+            return false;
+          }
+          break;
+          
+        case 2:
+          if (wizardData.contactoRealizado === null) {
+            showToast('Por favor indique si se pudo contactar con el responsable', 'error');
+            return false;
+          }
+          
+          if (wizardData.contactoRealizado === 'si') {
+            wizardData.contactoNombre = document.getElementById('contacto-nombre').value;
+            wizardData.contactoCargo = document.getElementById('contacto-cargo').value;
+            wizardData.contactoObservaciones = document.getElementById('contacto-observaciones').value;
+            
+            if (!wizardData.contactoNombre.trim()) {
+              showToast('Por favor ingrese el nombre del contacto', 'error');
+              return false;
+            }
+          } else {
+            wizardData.noContactoMotivo = document.getElementById('no-contacto-motivo').value;
+            wizardData.noContactoObservaciones = document.getElementById('no-contacto-observaciones').value;
+            
+            if (!wizardData.noContactoMotivo) {
+              showToast('Por favor seleccione el motivo por el cual no se pudo contactar', 'error');
+              return false;
+            }
+          }
+          break;
+          
+        case 7:
+          // Save observaciones generales
+          wizardData.observacionesPositivas = document.getElementById('observaciones-positivas').value;
+          wizardData.observacionesMejoras = document.getElementById('observaciones-mejoras').value;
+          wizardData.recomendaciones = document.getElementById('recomendaciones').value;
+          
+          if (wizardData.seguimientoRequerido === null) {
+            showToast('Por favor indique si se requiere seguimiento', 'error');
+            return false;
+          }
+          
+          if (wizardData.seguimientoRequerido === 'si') {
+            wizardData.seguimientoFecha = document.getElementById('seguimiento-fecha').value;
+            wizardData.seguimientoMotivo = document.getElementById('seguimiento-motivo').value;
+            
+            if (!wizardData.seguimientoFecha) {
+              showToast('Por favor ingrese la fecha sugerida para seguimiento', 'error');
+              return false;
+            }
+            
+            if (!wizardData.seguimientoMotivo.trim()) {
+              showToast('Por favor ingrese el motivo del seguimiento', 'error');
+              return false;
+            }
+          }
+          break;
+      }
+      
+      return true;
+    }
+
+    // Contact functions
+    function updateContacto(value) {
+      wizardData.contactoRealizado = value;
+      
+      // Update button styles
+      document.querySelectorAll('[data-contacto]').forEach(btn => {
+        if (btn.getAttribute('data-contacto') === value) {
+          btn.classList.remove('btn-outline');
+          btn.classList.add('btn-success');
+        } else {
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-outline');
+        }
+      });
+      
+      // Show/hide details
+      if (value === 'si') {
+        document.getElementById('contacto-details').classList.remove('hidden');
+        document.getElementById('no-contacto-details').classList.add('hidden');
+      } else {
+        document.getElementById('contacto-details').classList.add('hidden');
+        document.getElementById('no-contacto-details').classList.remove('hidden');
+      }
+    }
+
+    function updateSeguimiento(value) {
+      wizardData.seguimientoRequerido = value;
+      
+      // Update button styles
+      document.querySelectorAll('[data-seguimiento]').forEach(btn => {
+        if (btn.getAttribute('data-seguimiento') === value) {
+          btn.classList.remove('btn-outline');
+          btn.classList.add('btn-success');
+        } else {
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-outline');
+        }
+      });
+      
+      // Show/hide details
+      if (value === 'si') {
+        document.getElementById('seguimiento-details').classList.remove('hidden');
+      } else {
+        document.getElementById('seguimiento-details').classList.add('hidden');
+      }
+    }
+
+    // Load operation data
+    function cargarDatosOperacion(operacionName) {
+      wizardData.datosOperacion = {
+        nombre: operacionName,
+        fechaHora: new Date().toISOString()
+      };
+      wizardData.fechaHora = wizardData.datosOperacion.fechaHora;
+    }
+
+    function mostrarResumenComedor(operacionId) {
+      const operacion = userOperations.find(op => op.id === operacionId);
+      if (!operacion) return;
+      
+      const resumen = document.getElementById('resumen-comedor');
+      resumen.innerHTML = `
+        <h4 style="margin-bottom: 0.75rem; color: hsl(var(--foreground));">${operacion.nombre}</h4>
+        
+        <p style="color: hsl(var(--muted-foreground)); margin-bottom: 0;">
+          <i data-lucide="building" style="width: 1rem; height: 1rem; margin-right: 0.5rem;"></i>
+          ${operacion.nombre}
+        </p>
+        ${operacion.operacionData.descripcion ? `
+          <p style="color: hsl(var(--muted-foreground)); margin-top: 0.5rem;">
+            <i data-lucide="info" style="width: 1rem; height: 1rem; margin-right: 0.5rem;"></i>
+            ${operacion.operacionData.descripcion}
+          </p>
+        ` : ''}
+      `;
+      resumen.classList.remove('hidden');
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    function cargarPersonal(operacionId) {
+      const operacion = userOperations.find(op => op.id == operacionId);
+      if (!operacion || !operacion.operacionData) {
+        console.log('Operación no válida:', operacionId);
+        wizardData.personal = [];
+        return;
+      }
+      
+      wizardData.personal = operacion.operacionData.personal || [];
+    }
+
+    function loadPersonalStep() {
+      const container = document.getElementById('personal-list');
+      
+      if (wizardData.personal.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <i data-lucide="users"></i>
+            </div>
+            <div class="empty-state-title">No hay personal registrado</div>
+            <p>No se encontró personal para este comedor</p>
+          </div>
+        `;
+        return;
+      }
+      
+    
+      container.innerHTML = `
+        <div class="card">
+          <h3 class="card-title">Verificación de Personal</h3>
+          <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1.5rem;">
+            Confirma la presencia del personal en el comedor
+          </p>
+          
+          ${wizardData.personal.map(persona => `
+
+            ${console.log(persona)} 
+            <div class="list-item">
+              <div class="list-item-header">
+                <div class="list-item-title">${persona.nombre} </div>
+                <span class="badge badge-secondary">DNI: ${persona.dni}</span>
+              </div>
+              <div class="list-item-content">
+                ${persona.cat_descrip || 'Cargo no especificado'}
+              </div>
+              <div class="list-item-actions">
+               
+                <button class="btn ${wizardData.personalVerificado[persona.dni] === 'presente' ? 'btn-success' : 'btn-outline'}"
+                        onclick="updatePersonalStatus('${persona.dni}', 'presente')">
+                  <i data-lucide="check"></i> Presente
+                </button>
+                <button class="btn ${wizardData.personalVerificado[persona.dni] === 'ausente' ? 'btn-destructive' : 'btn-outline'}"
+                        onclick="updatePersonalStatus('${persona.dni}', 'ausente')">
+                  <i data-lucide="x"></i> Ausente
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    function updatePersonalStatus(dni, status) {
+      wizardData.personalVerificado[dni] = status;
+      loadPersonalStep(); // Refresh the display
+    }
+
+    function updatePersonalNombre(dni, nombre) {
+      wizardData.personalNombres[dni] = nombre;
+    }
+
+    function loadCarnetsStep() {
+      const container = document.getElementById('carnets-list');
+      
+      if (wizardData.personal.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <i data-lucide="credit-card"></i>
+            </div>
+            <div class="empty-state-title">No hay personal para verificar</div>
+            <p>Primero debe verificar el personal en el paso anterior</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = `
+        <div class="card">
+          <h3 class="card-title">Verificación de Carnets Sanitarios</h3>
+          <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1.5rem;">
+            Verifica el estado de los carnets sanitarios del personal
+          </p>
+          
+          ${wizardData.personal.map(persona => `
+            <div class="list-item">
+              <div class="list-item-header">
+                <div class="list-item-title">${persona.nombre}</div>
+                <span class="badge ${wizardData.personalVerificado[persona.dni] === 'presente' ? 'badge-success' : 'badge-secondary'}">
+                  ${wizardData.personalVerificado[persona.dni] === 'presente' ? 'Presente' : 'Estado no verificado'}
+                </span>
+              </div>
+              <div class="list-item-content">
+                DNI: ${persona.dni} - ${persona.cat_descrip || 'Cargo no especificado'}
+              </div>
+              <div class="list-item-actions">
+                <button class="btn ${wizardData.carnetsVerificados[persona.dni] === 'vigente' ? 'btn-success' : 'btn-outline'}"
+                        onclick="updateCarnetStatus('${persona.dni}', 'vigente')"
+                       ${wizardData.personalVerificado[persona.dni] !== 'presente' ? 'disabled' : ''}>
+                  <i data-lucide="check-circle"></i> Vigente
+                </button>
+                <button class="btn ${wizardData.carnetsVerificados[persona.dni] === 'vencido' ? 'btn-warning' : 'btn-outline'}"
+                        onclick="updateCarnetStatus('${persona.dni}', 'vencido')"
+                       ${wizardData.personalVerificado[persona.dni] !== 'presente' ? 'disabled' : ''}>
+                  <i data-lucide="alert-triangle"></i> Vencido
+                </button>
+                <button class="btn ${wizardData.carnetsVerificados[persona.dni] === 'no-presenta' ? 'btn-destructive' : 'btn-outline'}"
+                        onclick="updateCarnetStatus('${persona.dni}', 'no-presenta')"
+                       ${wizardData.personalVerificado[persona.dni] !== 'presente' ? 'disabled' : ''}>
+                  <i data-lucide="x-circle"></i> No presenta
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    function updateCarnetStatus(dni, status) {
+      wizardData.carnetsVerificados[dni] = status;
+      loadCarnetsStep(); // Refresh the display
+    }
+
+    function loadEvaluacionStep() {
+      const container = document.getElementById('evaluacion-content');
+      
+      container.innerHTML = evaluationCriteria.map(criteria => `
+        <div class="evaluation-item">
+          <div class="evaluation-header">
+            <div>
+              <div class="evaluation-title">${criteria.title}</div>
+              <div class="evaluation-description">${criteria.description}</div>
+            </div>
+          </div>
+          
+          <div class="evaluation-actions">
+            <button class="btn ${wizardData.evaluaciones[criteria.id] === 'conforme' ? 'btn-success' : 'btn-outline'}"
+                    onclick="updateEvaluacion('${criteria.id}', 'conforme')">
+              <i data-lucide="check"></i> Conforme
+            </button>
+            <button class="btn ${wizardData.evaluaciones[criteria.id] === 'no-conforme' ? 'btn-destructive' : 'btn-outline'}"
+                    onclick="updateEvaluacion('${criteria.id}', 'no-conforme')">
+              <i data-lucide="x"></i> No Conforme
+            </button>
+            <button class="btn ${wizardData.evaluaciones[criteria.id] === 'no-aplica' ? 'btn-secondary' : 'btn-outline'}"
+                    onclick="updateEvaluacion('${criteria.id}', 'no-aplica')">
+              <i data-lucide="minus"></i> No Aplica
+            </button>
+          </div>
+          
+          <div class="evaluation-notes">
+            <textarea class="form-control textarea"
+                      placeholder="Observaciones para ${criteria.title}..."
+                     onchange="updateEvaluacionNota('${criteria.id}', this.value)">${wizardData.evaluacionesNotas[criteria.id] || ''}</textarea>
+          </div>
+        </div>
+      `).join('');
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    function updateEvaluacion(criteriaId, value) {
+      wizardData.evaluaciones[criteriaId] = value;
+      loadEvaluacionStep(); // Refresh the display
+    }
+
+    function updateEvaluacionNota(criteriaId, nota) {
+      wizardData.evaluacionesNotas[criteriaId] = nota;
+    }
+
+    function loadEncuestaStep() {
+      const container = document.getElementById('encuesta-content');
+      
+      const encuestaPreguntas = [
+        {
+          id: 'satisfaccion-general',
+          pregunta: '¿Cómo calificaría la satisfacción general de los comensales?',
+          tipo: 'escala'
+        },
+        {
+          id: 'calidad-comida',
+          pregunta: '¿Cómo calificaría la calidad de la comida?',
+          tipo: 'escala'
+        },
+        {
+          id: 'atencion-personal',
+          pregunta: '¿Cómo calificaría la atención del personal?',
+          tipo: 'escala'
+        },
+        {
+          id: 'limpieza-instalaciones',
+          pregunta: '¿Cómo calificaría la limpieza de las instalaciones?',
+          tipo: 'escala'
+        },
+        {
+          id: 'variedad-menu',
+          pregunta: '¿Cómo calificaría la variedad del menú?',
+          tipo: 'escala'
+        }
+      ];
+      
+      container.innerHTML = `
+        <div class="card">
+          <h3 class="card-title">Encuesta de Satisfacción</h3>
+          <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1.5rem;">
+            Evalúa los aspectos de satisfacción basándote en la observación y feedback de los comensales
+          </p>
+          
+          ${encuestaPreguntas.map(pregunta => `
+            <div class="form-group">
+              <label class="form-label">${pregunta.pregunta}</label>
+              <div class="flex gap-2" style="flex-wrap: wrap;">
+                ${[1, 2, 3, 4, 5].map(valor => `
+                  <button class="btn ${wizardData.encuestas[pregunta.id] == valor ? 'btn-primary' : 'btn-outline'}"
+                          onclick="updateEncuesta('${pregunta.id}', ${valor})"
+                         style="min-width: 50px;">
+                    ${valor}
+                  </button>
+                `).join('')}
+              </div>
+              <small style="color: hsl(var(--muted-foreground));">1 = Muy malo, 5 = Excelente</small>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    function updateEncuesta(preguntaId, valor) {
+      wizardData.encuestas[preguntaId] = valor;
+      loadEncuestaStep(); // Refresh the display
+    }
+
+    function loadFinalizarStep() {
+      // Load consumos info
+      const consumosContainer = document.getElementById('consumos-info');
+      
+      // Get current operation data
+      const operacion = userOperations.find(op => op.id === wizardData.operacionId);
+      
+      consumosContainer.innerHTML = `
+        <div class="card">
+          <h3 class="card-title">Resumen de la Auditoría</h3>
+          <div class="report-grid">
+            <div class="report-item">
+              <div class="report-item-label">Comedor</div>
+              <div class="report-item-value">${wizardData.operacionName}</div>
+            </div>
+            <div class="report-item">
+              <div class="report-item-label">Fecha y Hora</div>
+              <div class="report-item-value">${new Date(wizardData.fechaHora).toLocaleString('es-ES')}</div>
+            </div>
+            <div class="report-item">
+              <div class="report-item-label">Auditor</div>
+              <div class="report-item-value">${wizardData.usuarioNombre}</div>
+            </div>
+            <div class="report-item">
+              <div class="report-item-label">Personal Verificado</div>
+              <div class="report-item-value">${Object.keys(wizardData.personalVerificado).length} personas</div>
+            </div>
+            <div class="report-item">
+              <div class="report-item-label">Evaluaciones</div>
+              <div class="report-item-value">${Object.keys(wizardData.evaluaciones).length} criterios</div>
+            </div>
+            <div class="report-item">
+              <div class="report-item-label">Fotos Tomadas</div>
+              <div class="report-item-value">${wizardData.fotos.length} fotos</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Update photo gallery display
+      updatePhotoGallery();
+    }
+
+    // Camera Functions
+    function toggleCamera() {
+      const container = document.getElementById('camera-container');
+      const controls = document.getElementById('camera-controls');
+      
+      if (container.style.display === 'none' || !container.style.display) {
+        abrirCamara();
+      } else {
+        cerrarCamara();
+      }
+    }
+
+    function abrirCamara() {
+      const video = document.getElementById('video');
+      const container = document.getElementById('camera-container');
+      const controls = document.getElementById('camera-controls');
+      const overlay = document.getElementById('camera-overlay');
+      
+      navigator.mediaDevices.getUserMedia({ 
+        video: {
+          facingMode: 'environment',
+         width: { ideal: 1280 },
+         height: { ideal: 720 }
+        }
+      })
+      .then(stream => {
+        cameraStream = stream;
+        video.srcObject = stream;
+        container.style.display = 'block';
+        controls.style.display = 'flex';
+        overlay.style.display = 'none';
+        
+        showToast('Cámara activada', 'success');
+      })
+      .catch(error => {
+        console.error('Error accessing camera:', error);
+        showToast('Error al acceder a la cámara', 'error');
+      });
+    }
+
+    function cerrarCamara() {
+      const container = document.getElementById('camera-container');
+      const controls = document.getElementById('camera-controls');
+      const overlay = document.getElementById('camera-overlay');
+      
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      
+      container.style.display = 'none';
+      controls.style.display = 'none';
+      overlay.style.display = 'flex';
+    }
+
+    function tomarFoto() {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const context = canvas.getContext('2d');
+      
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // Draw video frame to canvas
+      context.drawImage(video, 0, 0);
+      
+      // Convert to blob
+      canvas.toBlob(blob => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const photoData = {
+            id: Date.now().toString(),
+            data: e.target.result,
+            timestamp: new Date().toISOString(),
+            step: currentStep
+          };
+          
+          wizardData.fotos.push(photoData);
+          updatePhotoGallery();
+          showToast('Foto capturada correctamente', 'success');
+        };
+        reader.readAsDataURL(blob);
+      }, 'image/jpeg', 0.8);
+    }
+
+    function updatePhotoGallery() {
+      const gallery = document.getElementById('photo-gallery');
+      const noPhotosMessage = document.getElementById('no-photos-message');
+      
+      if (wizardData.fotos.length === 0) {
+        gallery.innerHTML = '';
+        noPhotosMessage.style.display = 'block';
+        return;
+      }
+      
+      noPhotosMessage.style.display = 'none';
+      gallery.innerHTML = wizardData.fotos.map(foto => `
+        <div class="photo-item">
+          <img src="${foto.data}" alt="Foto de auditoría">
+          <button class="delete-btn" onclick="eliminarFoto('${foto.id}')">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+      `).join('');
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    function eliminarFoto(fotoId) {
+      if (confirm('¿Está seguro que desea eliminar esta foto?')) {
+        wizardData.fotos = wizardData.fotos.filter(foto => foto.id !== fotoId);
+        updatePhotoGallery();
+        showToast('Foto eliminada', 'success');
+      }
+    }
+
+    // Finalize audit
+    function finalizarAuditoria() {
+      if (!confirm('¿Está seguro que desea finalizar la auditoría? Esta acción no se puede deshacer.')) {
+        return;
+      }
+      
+      showLoading();
+      
+      // Get current location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            wizardData.lat = position.coords.latitude;
+            wizardData.lng = position.coords.longitude;
+            guardarAuditoria();
+          },
+          error => {
+            console.warn('Could not get location:', error);
+            guardarAuditoria();
+          }
+        );
+      } else {
+        guardarAuditoria();
+      }
+    }
+
+    function guardarAuditoria() {
+      const auditoriaData = {
+        ...wizardData,
+        fechaCreacion: new Date().toISOString(),
+        estado: 'completada'
+      };
+      
+      // Generate unique ID
+      const auditoriaId = `auditoria_${Date.now()}_${wizardData.usuarioDNI}`;
+      
+      database.ref(`auditorias/${auditoriaId}`).set(auditoriaData)
+        .then(() => {
+          hideLoading();
+          
+          Swal.fire({
+            title: '¡Auditoría Completada!',
+            text: 'La auditoría se ha guardado correctamente',
+            icon: 'success',
+            confirmButtonText: 'Ver Resumen',
+            showCancelButton: true,
+            cancelButtonText: 'Ir al Inicio'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              mostrarResumenAuditoria(auditoriaId, auditoriaData);
+            } else {
+              showScreen('dashboard');
+            }
+          });
+        })
+        .catch(error => {
+          hideLoading();
+          console.error('Error saving audit:', error);
+          showToast('Error al guardar la auditoría', 'error');
+        });
+    }
+
+    function mostrarResumenAuditoria(auditoriaId, auditoriaData) {
+      const operacion = userOperations.find(op => op.id === auditoriaData.operacionId);
+      
+      Swal.fire({
+        title: 'Resumen de Auditoría',
+        html: `
+          <div style="text-align: left; max-height: 400px; overflow-y: auto;">
+            <h4>${auditoriaData.operacionName}</h4>
+            <p><strong>Fecha:</strong> ${new Date(auditoriaData.fechaHora).toLocaleString('es-ES')}</p>
+            <p><strong>Auditor:</strong> ${auditoriaData.usuarioNombre}</p>
+            
+            <h5>Personal Verificado:</h5>
+            <ul>
+              ${Object.keys(auditoriaData.personalVerificado).map(dni => {
+                const persona = auditoriaData.personal.find(p => p.dni === dni);
+                const nombre = auditoriaData.personalNombres[dni] || (persona ? `${persona.nombre}` : dni);
+                return `<li>${nombre}: ${auditoriaData.personalVerificado[dni]}</li>`;
+              }).join('')}
+            </ul>
+            
+            <h5>Evaluaciones:</h5>
+            <ul>
+              ${Object.keys(auditoriaData.evaluaciones).map(criteriaId => {
+                const criteria = evaluationCriteria.find(c => c.id === criteriaId);
+                return `<li>${criteria ? criteria.title : criteriaId}: ${auditoriaData.evaluaciones[criteriaId]}</li>`;
+              }).join('')}
+            </ul>
+            
+            <p><strong>Fotos tomadas:</strong> ${auditoriaData.fotos.length}</p>
+            
+            ${auditoriaData.seguimientoRequerido === 'si' ? 
+              `<p><strong>Seguimiento requerido:</strong> ${auditoriaData.seguimientoFecha}</p>` : 
+              ''
+            }
+          </div>
+        `,
+        width: '90%',
+        confirmButtonText: 'Cerrar'
+      }).then(() => {
+        showScreen('dashboard');
+      });
+    }
+
+    // Historial Functions
+    function loadHistorialData() {
+      if (!currentUser) return;
+      
+      showLoading();
+      
+      // Get user's operation IDs
+      const userOperationIds = userOperations.map(op => op.id);
+      
+      database.ref('auditorias').orderByChild('usuarioDNI').equalTo(currentUser.dni).once('value')
+        .then(snapshot => {
+          const auditorias = snapshot.val() || {};
+          
+          // Filter auditorias by user's operations
+          const userAuditorias = Object.keys(auditorias)
+            .filter(key => userOperationIds.includes(auditorias[key].operacionId))
+            .map(key => ({ id: key, ...auditorias[key] }))
+            .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
+          
+          updateHistorialList(userAuditorias);
+        })
+        .catch(error => {
+          console.error('Error loading historial:', error);
+          showToast('Error al cargar el historial', 'error');
+        })
+        .finally(() => {
+          hideLoading();
+        });
+    }
+
+    function updateHistorialList(auditorias) {
+      const container = document.getElementById('historial-list');
+      const emptyState = document.getElementById('historial-empty');
+      
+      if (auditorias.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      container.innerHTML = auditorias.map(auditoria => {
+        const fecha = new Date(auditoria.fechaHora).toLocaleString('es-ES');
+        const operacion = userOperations.find(op => op.id === auditoria.operacionId);
+        const operacionNombre = operacion ? operacion.nombre : 'Comedor no encontrado';
+        
+        // Calculate summary stats
+        const personalPresente = Object.values(auditoria.personalVerificado || {}).filter(status => status === 'presente').length;
+        const evaluacionesConformes = Object.values(auditoria.evaluaciones || {}).filter(eval => eval === 'conforme').length;
+        const totalEvaluaciones = Object.keys(auditoria.evaluaciones || {}).length;
+        
+        return `
+          <div class="list-item">
+            <div class="list-item-header">
+              <div class="list-item-title">${operacionNombre}</div>
+              <div class="flex gap-2">
+                <span class="badge badge-info">${fecha}</span>
+                ${auditoria.seguimientoRequerido === 'si' ? '<span class="badge badge-warning">Seguimiento</span>' : ''}
+              </div>
+            </div>
+            <div class="list-item-content">
+              <p>Personal presente: ${personalPresente} | Evaluaciones conformes: ${evaluacionesConformes}/${totalEvaluaciones} | Fotos: ${(auditoria.fotos || []).length}</p>
+              ${auditoria.observacionesPositivas ? `<p><strong>Aspectos positivos:</strong> ${auditoria.observacionesPositivas.substring(0, 100)}${auditoria.observacionesPositivas.length > 100 ? '...' : ''}</p>` : ''}
+            </div>
+            <div class="list-item-actions">
+              <button class="btn btn-outline btn-sm" onclick="verAuditoria('${auditoria.id}')">
+                <i data-lucide="eye"></i>
+                Ver detalles
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="generarReporteAuditoria('${auditoria.id}')">
+                <i data-lucide="file-text"></i>
+                Generar reporte
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    function verAuditoria(auditoriaId) {
+      showLoading();
+      
+      database.ref(`auditorias/${auditoriaId}`).once('value')
+        .then(snapshot => {
+          const auditoria = snapshot.val();
+          if (!auditoria) {
+            throw new Error('Auditoría no encontrada');
+          }
+          
+          mostrarDetalleAuditoria(auditoria);
+        })
+        .catch(error => {
+          console.error('Error loading audit details:', error);
+          showToast('Error al cargar los detalles de la auditoría', 'error');
+        })
+        .finally(() => {
+          hideLoading();
+        });
+    }
+
+function mostrarDetalleAuditoria(auditoria) {
+  const personalVerificado = auditoria.personalVerificado || {};
+  const personal = auditoria.personal || [];
+  const carnets = auditoria.carnetsVerificados || {};
+
+  const filas = Object.keys(personalVerificado).map(dni => {
+    const persona = personal.find(p => String(p.dni) === String(dni));
+    const nombre = persona ? persona.nombre : dni;
+    const status = personalVerificado[dni];
+    const carnet = carnets[dni] || 'No verificado';
+    return `
+      <tr>
+        <td>${nombre}</td>
+        <td>${dni}</td>
+        <td><span class="badge ${status === 'presente' ? 'badge-success' : 'badge-secondary'}">${status}</span></td>
+        <td><span class="badge ${carnet === 'vigente' ? 'badge-success' : carnet === 'vencido' ? 'badge-warning' : 'badge-destructive'}">${carnet}</span></td>
+      </tr>
+    `;
+  }).join('');
+
+  const operacion = userOperations.find(op => op.id === auditoria.operacionId);
+  const operacionNombre = operacion ? operacion.nombre : 'Comedor no encontrado';
+
+  const fotosHtml = (auditoria.fotos && auditoria.fotos.length > 0)
+    ? `
+      <div style="margin-top: 1rem;">
+        <h5>Fotos Tomadas:</h5>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;">
+          ${auditoria.fotos.map(url => `
+            <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden;">
+              <img src="${url.data}" alt="Foto auditoría" style="width: 100%; height: auto; display: block;" />
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `
+    : `<p><strong>Fotos tomadas:</strong> 0</p>`;
+
+  Swal.fire({
+    title: `Detalles de Auditoría - ${operacionNombre}`,
+    html: `
+      <div style="text-align: left; max-height: 500px; overflow-y: auto;">
+        <div style="margin-bottom: 1rem;">
+          <strong>Fecha:</strong> ${new Date(auditoria.fechaHora).toLocaleString('es-ES')}<br>
+          <strong>Auditor:</strong> ${auditoria.usuarioNombre}
+        </div>
+        
+        <h5>Personal Verificado:</h5>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem;">
+          <thead>
+            <tr style="background-color: #f5f5f5;">
+              <th style="border: 1px solid #ddd; padding: 8px;">Nombre</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">DNI</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">Estado</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">Carnet</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filas}
+          </tbody>
+        </table>
+        
+        <h5>Evaluaciones:</h5>
+        <ul>
+          ${Object.keys(auditoria.evaluaciones || {}).map(criteriaId => {
+            const criteria = evaluationCriteria.find(c => c.id === criteriaId);
+            return `<li><strong>${criteria ? criteria.title : criteriaId}:</strong> ${auditoria.evaluaciones[criteriaId]}</li>`;
+          }).join('')}
+        </ul>
+        
+        ${auditoria.observacionesPositivas ? `<h5>Aspectos Positivos:</h5><p>${auditoria.observacionesPositivas}</p>` : ''}
+        ${auditoria.observacionesMejoras ? `<h5>Oportunidades de Mejora:</h5><p>${auditoria.observacionesMejoras}</p>` : ''}
+        ${auditoria.recomendaciones ? `<h5>Recomendaciones:</h5><p>${auditoria.recomendaciones}</p>` : ''}
+
+        ${fotosHtml}
+      </div>
+    `,
+    width: '90%',
+    confirmButtonText: 'Cerrar'
+  });
+}
+
+
+    // Reportes Functions
+    function loadReportesScreen() {
+      // Set default date range (last 30 days)
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+      
+      document.getElementById('date-from').value = thirtyDaysAgo.toISOString().split('T')[0];
+      document.getElementById('date-to').value = today.toISOString().split('T')[0];
+    }
+
+    function buscarReportes() {
+      const dateFrom = document.getElementById('date-from').value;
+      const dateTo = document.getElementById('date-to').value;
+      const comedorId = document.getElementById('reporte-comedor').value;
+      
+      if (!dateFrom || !dateTo) {
+        showToast('Por favor seleccione el rango de fechas', 'error');
+        return;
+      }
+      
+      if (new Date(dateFrom) > new Date(dateTo)) {
+        showToast('La fecha de inicio no puede ser mayor a la fecha final', 'error');
+        return;
+      }
+      
+      showLoading();
+      
+      // Get user's operation IDs
+      const userOperationIds = userOperations.map(op => op.id);
+      
+      database.ref('auditorias').orderByChild('usuarioDNI').equalTo(currentUser.dni).once('value')
+        .then(snapshot => {
+          const auditorias = snapshot.val() || {};
+          
+          // Filter auditorias by user's operations and date range
+          let filteredAuditorias = Object.keys(auditorias)
+            .filter(key => userOperationIds.includes(auditorias[key].operacionId))
+            .map(key => ({ id: key, ...auditorias[key] }))
+            .filter(auditoria => {
+              const auditoriaDate = new Date(auditoria.fechaHora).toISOString().split('T')[0];
+              return auditoriaDate >= dateFrom && auditoriaDate <= dateTo;
+            });
+          
+          // Filter by comedor if selected
+          if (comedorId) {
+            filteredAuditorias = filteredAuditorias.filter(auditoria => auditoria.operacionId === comedorId);
+          }
+          
+          // Sort by date (newest first)
+          filteredAuditorias.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
+          
+          updateReportesList(filteredAuditorias);
+        })
+        .catch(error => {
+          console.error('Error searching reports:', error);
+          showToast('Error al buscar reportes', 'error');
+        })
+        .finally(() => {
+          hideLoading();
+        });
+    }
+
+   function updateReportesList(auditorias) {
+      const container = document.getElementById('reportes-list');
+      const emptyState = document.getElementById('reportes-empty');
+      const countBadge = document.getElementById('reportes-count');
+      
+      countBadge.textContent = `${auditorias.length} resultado${auditorias.length !== 1 ? 's' : ''}`;
+      
+      if (auditorias.length === 0) {
+        container.innerHTML = '';
+        emptyState.innerHTML = `
+          <div class="empty-state-icon">
+            <i data-lucide="search-x"></i>
+          </div>
+          <div class="empty-state-title">No se encontraron reportes</div>
+          <p>No hay auditorías que coincidan con los filtros seleccionados</p>
+        `;
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      container.innerHTML = auditorias.map(auditoria => {
+        const fecha = new Date(auditoria.fechaHora).toLocaleString('es-ES');
+        const operacion = userOperations.find(op => op.id === auditoria.operacionId);
+        const operacionNombre = operacion ? operacion.nombre : 'Comedor no encontrado';
+        
+        // Calculate summary stats
+        const personalPresente = Object.values(auditoria.personalVerificado || {}).filter(status => status === 'presente').length;
+        const totalPersonal = Object.keys(auditoria.personalVerificado || {}).length;
+        const evaluacionesConformes = Object.values(auditoria.evaluaciones || {}).filter(eval => eval === 'conforme').length;
+        const totalEvaluaciones = Object.keys(auditoria.evaluaciones || {}).length;
+        
+        // Calculate average satisfaction
+        const encuestas = auditoria.encuestas || {};
+        const promedioEncuesta = Object.keys(encuestas).length > 0 
+          ? (Object.values(encuestas).reduce((sum, val) => sum + val, 0) / Object.values(encuestas).length).toFixed(1)
+          : 'N/A';
+        
+        return `
+          <div class="list-item">
+            <div class="list-item-header">
+              <div class="list-item-title">${operacionNombre}</div>
+              <div class="flex gap-2">
+                <span class="badge badge-info">${new Date(auditoria.fechaHora).toLocaleDateString('es-ES')}</span>
+                ${auditoria.seguimientoRequerido === 'si' ? '<span class="badge badge-warning">Seguimiento</span>' : ''}
+              </div>
+            </div>
+            <div class="list-item-content">
+              <div class="report-grid" style="margin-bottom: 0.5rem;">
+                <div class="report-item">
+                  <div class="report-item-label">Personal Presente</div>
+                  <div class="report-item-value">${personalPresente}/${totalPersonal}</div>
+                </div>
+                <div class="report-item">
+                  <div class="report-item-label">Evaluaciones Conformes</div>
+                  <div class="report-item-value">${evaluacionesConformes}/${totalEvaluaciones}</div>
+                </div>
+                <div class="report-item">
+                  <div class="report-item-label">Promedio Satisfacción</div>
+                  <div class="report-item-value">${promedioEncuesta}/5</div>
+                </div>
+                <div class="report-item">
+                  <div class="report-item-label">Fotos</div>
+                  <div class="report-item-value">${(auditoria.fotos || []).length}</div>
+                </div>
+              </div>
+            </div>
+            <div class="list-item-actions">
+              <button class="btn btn-outline btn-sm" onclick="verAuditoria('${auditoria.id}')">
+                <i data-lucide="eye"></i>
+                Ver detalles
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="generarReporteAuditoria('${auditoria.id}')">
+                <i data-lucide="file-text"></i>
+                Generar PDF
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Initialize icons
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
+    function generarReporteAuditoria(auditoriaId) {
+      showLoading();
+      
+      database.ref(`auditorias/${auditoriaId}`).once('value')
+        .then(snapshot => {
+          const auditoria = snapshot.val();
+          if (!auditoria) {
+            throw new Error('Auditoría no encontrada');
+          }
+          
+          generarPDFReporte(auditoria);
+        })
+        .catch(error => {
+          console.error('Error loading audit for report:', error);
+          showToast('Error al cargar la auditoría para el reporte', 'error');
+        })
+        .finally(() => {
+          hideLoading();
+        });
+    }
+
+    function generarPDFReporte(auditoria) {
+      const operacion = userOperations.find(op => op.id === auditoria.operacionId);
+      const operacionNombre = operacion ? operacion.nombre : 'Comedor no encontrado';
+      
+      // Create a new window for the report
+      const reportWindow = window.open('', '_blank');
+      
+      // Calculate stats
+      const personalPresente = Object.values(auditoria.personalVerificado || {}).filter(status => status === 'presente').length;
+      const totalPersonal = Object.keys(auditoria.personalVerificado || {}).length;
+      const evaluacionesConformes = Object.values(auditoria.evaluaciones || {}).filter(eval => eval === 'conforme').length;
+      const totalEvaluaciones = Object.keys(auditoria.evaluaciones || {}).length;
+      
+      const encuestas = auditoria.encuestas || {};
+      const promedioEncuesta = Object.keys(encuestas).length > 0 
+        ? (Object.values(encuestas).reduce((sum, val) => sum + val, 0) / Object.values(encuestas).length).toFixed(1)
+        : 'N/A';
+      
+      const reportHTML = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Reporte de Auditoría - ${operacionNombre}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 2px solid #007bff;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .logo {
+              width: 80px;
+              height: 80px;
+              margin: 0 auto 20px;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: bold;
+              color: #007bff;
+              margin-bottom: 10px;
+            }
+            .subtitle {
+              color: #666;
+              font-size: 16px;
+            }
+            .section {
+              margin-bottom: 30px;
+            }
+            .section-title {
+              font-size: 18px;
+              font-weight: bold;
+              color: #007bff;
+              border-bottom: 1px solid #ddd;
+              padding-bottom: 10px;
+              margin-bottom: 15px;
+            }
+            .info-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 15px;
+              margin-bottom: 20px;
+            }
+            .info-item {
+              background: #f8f9fa;
+              padding: 15px;
+              border-radius: 5px;
+              border-left: 4px solid #007bff;
+            }
+            .info-label {
+              font-weight: bold;
+              color: #666;
+              font-size: 12px;
+              text-transform: uppercase;
+            }
+            .info-value {
+              font-size: 16px;
+              color: #333;
+              margin-top: 5px;
+            }
+            .table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+            }
+            .table th,
+            .table td {
+              border: 1px solid #ddd;
+              padding: 12px;
+              text-align: left;
+            }
+            .table th {
+              background-color: #f8f9fa;
+              font-weight: bold;
+            }
+            .badge {
+              display: inline-block;
+              padding: 4px 8px;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: bold;
+            }
+            .badge-success {
+              background-color: #d4edda;
+              color: #155724;
+            }
+            .badge-warning {
+              background-color: #fff3cd;
+              color: #856404;
+            }
+            .badge-danger {
+              background-color: #f8d7da;
+              color: #721c24;
+            }
+            .badge-secondary {
+              background-color: #e2e3e5;
+              color: #383d41;
+            }
+            .photos-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+              gap: 15px;
+              margin-top: 15px;
+            }
+            .photo-item {
+              border: 1px solid #ddd;
+              border-radius: 5px;
+              overflow: hidden;
+            }
+            .photo-item img {
+              width: 100%;
+              height: 150px;
+              object-fit: cover;
+            }
+            .print-btn {
+              background: #007bff;
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              border-radius: 5px;
+              cursor: pointer;
+              font-size: 16px;
+              margin: 20px 0;
+            }
+            .print-btn:hover {
+              background: #0056b3;
+            }
+            @media print {
+              .print-btn {
+                display: none;
+              }
+              body {
+                margin: 0;
+                padding: 15px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <img src="https://comedor.foodservice.com.ar/img/image.png" alt="Logo" class="logo">
+            <div class="title">Reporte de Auditoría Zonal</div>
+            <div class="subtitle">Sistema profesional de auditoría de comedores</div>
+          </div>
+
+          <button class="print-btn" onclick="window.print()">🖨️ Imprimir Reporte</button>
+
+          <div class="section">
+            <div class="section-title">Información General</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Comedor</div>
+                <div class="info-value">${operacionNombre}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Fecha y Hora</div>
+                <div class="info-value">${new Date(auditoria.fechaHora).toLocaleString('es-ES')}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Auditor</div>
+                <div class="info-value">${auditoria.usuarioNombre}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Estado</div>
+                <div class="info-value">
+                  <span class="badge ${auditoria.seguimientoRequerido === 'si' ? 'badge-warning' : 'badge-success'}">
+                    ${auditoria.seguimientoRequerido === 'si' ? 'Seguimiento Requerido' : 'Completada'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Resumen Ejecutivo</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Personal Presente</div>
+                <div class="info-value">${personalPresente}/${totalPersonal}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Evaluaciones Conformes</div>
+                <div class="info-value">${evaluacionesConformes}/${totalEvaluaciones}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Promedio Satisfacción</div>
+                <div class="info-value">${promedioEncuesta}/5</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Fotos Tomadas</div>
+                <div class="info-value">${(auditoria.fotos || []).length}</div>
+              </div>
+            </div>
+          </div>
+
+          ${auditoria.contactoRealizado ? `
+          <div class="section">
+            <div class="section-title">Contacto del Comedor</div>
+            ${auditoria.contactoRealizado === 'si' ? `
+              <p><strong>Contacto realizado:</strong> Sí</p>
+              <p><strong>Nombre:</strong> ${auditoria.contactoNombre}</p>
+              <p><strong>Cargo:</strong> ${auditoria.contactoCargo}</p>
+              ${auditoria.contactoObservaciones ? `<p><strong>Observaciones:</strong> ${auditoria.contactoObservaciones}</p>` : ''}
+            ` : `
+              <p><strong>Contacto realizado:</strong> No</p>
+              <p><strong>Motivo:</strong> ${auditoria.noContactoMotivo}</p>
+              ${auditoria.noContactoObservaciones ? `<p><strong>Observaciones:</strong> ${auditoria.noContactoObservaciones}</p>` : ''}
+            `}
+          </div>
+          ` : ''}
+
+          <div class="section">
+            <div class="section-title">Personal Verificado</div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>DNI</th>
+                  <th>Estado</th>
+                  <th>Carnet Sanitario</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.keys(auditoria.personalVerificado || {}).map(dni => {
+                  const persona = (auditoria.personal || []).find(p => String(p.dni) === String(dni));
+                  const nombre = auditoria.personalNombres[dni] || (persona ? `${persona.nombre}` : dni);
+                  const status = auditoria.personalVerificado[dni];
+                  const carnet = (auditoria.carnetsVerificados || {})[dni] || 'No verificado';
+                  
+                  return `
+                    <tr>
+                      <td>${nombre}</td>
+                      <td>${dni}</td>
+                      <td>
+                        <span class="badge ${status === 'presente' ? 'badge-success' : 'badge-secondary'}">
+                          ${status}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge ${carnet === 'vigente' ? 'badge-success' : carnet === 'vencido' ? 'badge-warning' : 'badge-danger'}">
+                          ${carnet}
+                        </span>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Evaluaciones del Comedor</div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Criterio</th>
+                  <th>Resultado</th>
+                  <th>Observaciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.keys(auditoria.evaluaciones || {}).map(criteriaId => {
+                  const criteria = evaluationCriteria.find(c => c.id === criteriaId);
+                  const resultado = auditoria.evaluaciones[criteriaId];
+                  const observaciones = (auditoria.evaluacionesNotas || {})[criteriaId] || '';
+                  
+                  return `
+                    <tr>
+                      <td>${criteria ? criteria.title : criteriaId}</td>
+                      <td>
+                        <span class="badge ${resultado === 'conforme' ? 'badge-success' : resultado === 'no-conforme' ? 'badge-danger' : 'badge-secondary'}">
+                          ${resultado}
+                        </span>
+                      </td>
+                      <td>${observaciones}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          ${Object.keys(auditoria.encuestas || {}).length > 0 ? `
+          <div class="section">
+            <div class="section-title">Encuesta de Satisfacción</div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Aspecto</th>
+                  <th>Calificación</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.keys(auditoria.encuestas).map(preguntaId => {
+                  const preguntas = {
+                    'satisfaccion-general': 'Satisfacción General',
+                    'calidad-comida': 'Calidad de la Comida',
+                    'atencion-personal': 'Atención del Personal',
+                    'limpieza-instalaciones': 'Limpieza de Instalaciones',
+                    'variedad-menu': 'Variedad del Menú'
+                  };
+                  
+                  return `
+                    <tr>
+                      <td>${preguntas[preguntaId] || preguntaId}</td>
+                      <td>${auditoria.encuestas[preguntaId]}/5</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          ` : ''}
+
+          ${auditoria.observacionesPositivas || auditoria.observacionesMejoras || auditoria.recomendaciones ? `
+          <div class="section">
+            <div class="section-title">Observaciones Generales</div>
+            ${auditoria.observacionesPositivas ? `
+              <div style="margin-bottom: 15px;">
+                <strong>Aspectos Positivos:</strong>
+                <p>${auditoria.observacionesPositivas}</p>
+              </div>
+            ` : ''}
+            ${auditoria.observacionesMejoras ? `
+              <div style="margin-bottom: 15px;">
+                <strong>Oportunidades de Mejora:</strong>
+                <p>${auditoria.observacionesMejoras}</p>
+              </div>
+            ` : ''}
+            ${auditoria.recomendaciones ? `
+              <div style="margin-bottom: 15px;">
+                <strong>Recomendaciones:</strong>
+                <p>${auditoria.recomendaciones}</p>
+              </div>
+            ` : ''}
+          </div>
+          ` : ''}
+
+          ${auditoria.seguimientoRequerido === 'si' ? `
+          <div class="section">
+            <div class="section-title">Seguimiento Requerido</div>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Fecha Sugerida</div>
+                <div class="info-value">${new Date(auditoria.seguimientoFecha).toLocaleDateString('es-ES')}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Motivo</div>
+                <div class="info-value">${auditoria.seguimientoMotivo}</div>
+              </div>
+            </div>
+          </div>
+          ` : ''}
+
+          ${(auditoria.fotos || []).length > 0 ? `
+          <div class="section">
+            <div class="section-title">Galería de Fotos (${auditoria.fotos.length})</div>
+            <div class="photos-grid">
+              ${auditoria.fotos.map((foto, index) => `
+                <div class="photo-item">
+                  <img src="${foto.data}" alt="Foto ${index + 1}">
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+
+          <div class="section" style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <p style="color: #666; font-size: 14px;">
+              Reporte generado el ${new Date().toLocaleString('es-ES')}<br>
+              Sistema de Auditoría Zonal - Comedores
+            </p>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      reportWindow.document.write(reportHTML);
+      reportWindow.document.close();
+      
+      showToast('Reporte generado correctamente', 'success');
+    }
+
+    // Initialize default date range on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+      
+      document.getElementById('date-from').value = thirtyDaysAgo.toISOString().split('T')[0];
+      document.getElementById('date-to').value = today.toISOString().split('T')[0];
+    });
+  </script>
+</body>
+</html>
