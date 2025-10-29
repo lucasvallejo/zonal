@@ -690,9 +690,25 @@
 
     .camera-controls {
       display: flex;
-      justify-content: center;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
       gap: 1rem;
       margin-bottom: 1rem;
+    }
+
+    .camera-controls .camera-buttons {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .camera-context {
+      flex: 1 1 240px;
+      color: hsl(var(--muted-foreground));
+      font-size: 0.95rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
     }
 
     .photo-gallery {
@@ -744,6 +760,19 @@
 
     .photo-item .delete-btn:hover {
       opacity: 1;
+    }
+
+    .photo-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .photo-meta .badge {
+      font-size: 0.65rem;
     }
 
     .floating-camera-btn {
@@ -1280,6 +1309,10 @@
               <div class="wizard-step-number" id="step-number">Paso 1 de 8</div>
               <h2 class="wizard-step-title" id="step-title">Seleccionar Comedor</h2>
               <p class="wizard-step-description" id="step-description">Elige el comedor que deseas auditar</p>
+              <button class="btn btn-outline btn-sm" style="margin-top: 0.75rem;" onclick="confirmResetWizard()">
+                <i data-lucide="refresh-cw"></i>
+                Reiniciar auditoría
+              </button>
             </div>
 
             <!-- Wizard Content -->
@@ -1292,110 +1325,66 @@
                     <option value="">Seleccione un comedor</option>
                   </select>
                 </div>
-                
+
+                <div class="form-group">
+                  <label class="form-label">Turno de auditoría</label>
+                  <div class="flex gap-2" style="flex-wrap: wrap;">
+                    <button type="button" class="btn btn-outline" data-turno="TM" onclick="selectTurno('TM')">
+                      <i data-lucide="sun"></i> TM (07 a 16 hs)
+                    </button>
+                    <button type="button" class="btn btn-outline" data-turno="TT_TN" onclick="selectTurno('TT_TN')">
+                      <i data-lucide="moon"></i> TT / TN (16 a 07 hs)
+                    </button>
+                  </div>
+                  <small style="color: hsl(var(--muted-foreground));">Solo se puede auditar un turno dentro de su horario establecido.</small>
+                </div>
+
                 <div id="resumen-comedor" class="card hidden">
                   <!-- Filled dynamically -->
                 </div>
               </div>
 
-              <!-- Step 2: Contacto del Comedor -->
+              <!-- Step 2: Verificación de Personal -->
               <div class="wizard-panel" id="wizard-step-2">
-                <div class="card">
-                  <h3 class="card-title">Contacto del Comedor</h3>
-                  <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">
-                    Registra la información del contacto principal del comedor
-                  </p>
-                  
-                  <div class="form-group">
-                    <label class="form-label">¿Se pudo contactar con el responsable del comedor?</label>
-                    <div class="flex gap-2">
-                      <button type="button" class="btn btn-outline" data-contacto="si" onclick="updateContacto('si')">
-                        <i data-lucide="check"></i> Sí
-                      </button>
-                      <button type="button" class="btn btn-outline" data-contacto="no" onclick="updateContacto('no')">
-                        <i data-lucide="x"></i> No
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div id="contacto-details" class="hidden">
-                    <div class="form-group">
-                      <label for="contacto-nombre" class="form-label">Nombre del contacto</label>
-                      <input type="text" id="contacto-nombre" class="form-control" placeholder="Nombre completo">
-                    </div>
-                    
-                    <div class="form-group">
-                      <label for="contacto-cargo" class="form-label">Cargo</label>
-                      <input type="text" id="contacto-cargo" class="form-control" placeholder="Cargo o función">
-                    </div>
-                    
-                    <div class="form-group">
-                      <label for="contacto-observaciones" class="form-label">Observaciones del contacto</label>
-                      <textarea id="contacto-observaciones" class="form-control textarea" placeholder="Comentarios adicionales sobre el contacto..."></textarea>
-                    </div>
-                  </div>
-                  
-                  <div id="no-contacto-details" class="hidden">
-                    <div class="form-group">
-                      <label for="no-contacto-motivo" class="form-label">Motivo por el cual no se pudo contactar</label>
-                      <select id="no-contacto-motivo" class="form-control form-select">
-                        <option value="">Seleccione un motivo</option>
-                        <option value="ausente">Responsable ausente</option>
-                        <option value="ocupado">Responsable ocupado</option>
-                        <option value="no-disponible">No hay responsable disponible</option>
-                        <option value="otro">Otro motivo</option>
-                      </select>
-                    </div>
-                    
-                    <div class="form-group">
-                      <label for="no-contacto-observaciones" class="form-label">Observaciones</label>
-                      <textarea id="no-contacto-observaciones" class="form-control textarea" placeholder="Detalles adicionales..."></textarea>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Step 3: Verificación de Personal -->
-              <div class="wizard-panel" id="wizard-step-3">
                 <div id="personal-list">
                   <!-- Filled dynamically -->
                 </div>
               </div>
 
-              <!-- Step 4: Verificación de Carnets -->
-              <div class="wizard-panel" id="wizard-step-4">
+              <!-- Step 3: Verificación de Carnets -->
+              <div class="wizard-panel" id="wizard-step-3">
                 <div id="carnets-list">
                   <!-- Filled dynamically -->
                 </div>
               </div>
 
-              <!-- Step 5: Evaluación del Comedor -->
-              <div class="wizard-panel" id="wizard-step-5">
+              <!-- Step 4: Evaluación del Comedor -->
+              <div class="wizard-panel" id="wizard-step-4">
                 <div class="evaluation-grid" id="evaluacion-content">
                   <!-- Filled dynamically -->
                 </div>
               </div>
 
-              <!-- Step 6: Encuesta de Satisfacción -->
-              <div class="wizard-panel" id="wizard-step-6">
+              <!-- Step 5: Encuesta de Satisfacción -->
+              <div class="wizard-panel" id="wizard-step-5">
                 <div id="encuesta-content">
                   <!-- Filled dynamically -->
                 </div>
               </div>
 
-              <!-- Step 7: Observaciones Generales -->
-              <div class="wizard-panel" id="wizard-step-7">
+              <!-- Step 6: Observaciones Generales -->
+              <div class="wizard-panel" id="wizard-step-6">
                 <div class="card">
                   <h3 class="card-title">Observaciones Generales</h3>
                   <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">
                     Registra observaciones adicionales sobre la auditoría
                   </p>
-                  
+
                   <div class="form-group">
                     <label for="observaciones-positivas" class="form-label">Aspectos Positivos</label>
                     <textarea id="observaciones-positivas" class="form-control textarea" placeholder="Menciona los aspectos positivos encontrados durante la auditoría..."></textarea>
                   </div>
-                  
+
                   <div class="form-group">
                     <label for="observaciones-mejoras" class="form-label">Oportunidades de Mejora</label>
                     <textarea id="observaciones-mejoras" class="form-control textarea" placeholder="Describe las áreas que requieren mejoras..."></textarea>
@@ -1405,7 +1394,12 @@
                     <label for="recomendaciones" class="form-label">Recomendaciones</label>
                     <textarea id="recomendaciones" class="form-control textarea" placeholder="Proporciona recomendaciones específicas..."></textarea>
                   </div>
-                  
+
+                  <div class="form-group">
+                    <label for="otras-gestiones" class="form-label">Otras Gestiones Relevantes</label>
+                    <textarea id="otras-gestiones" class="form-control textarea" placeholder="Detalla otras gestiones realizadas en simultáneo que deban ser informadas..."></textarea>
+                  </div>
+
                   <div class="form-group">
                     <label for="seguimiento-requerido" class="form-label">¿Se requiere seguimiento?</label>
                     <div class="flex gap-2">
@@ -1417,16 +1411,79 @@
                       </button>
                     </div>
                   </div>
-                  
+
                   <div id="seguimiento-details" class="hidden">
                     <div class="form-group">
                       <label for="seguimiento-fecha" class="form-label">Fecha sugerida para seguimiento</label>
                       <input type="date" id="seguimiento-fecha" class="form-control">
                     </div>
-                    
+
+                    <div class="form-group">
+                      <label for="seguimiento-recordatorio" class="form-label">Recordatorio</label>
+                      <input type="datetime-local" id="seguimiento-recordatorio" class="form-control">
+                      <small style="color: hsl(var(--muted-foreground));">Recibirás un aviso cuando llegue la fecha y hora seleccionada.</small>
+                    </div>
+
                     <div class="form-group">
                       <label for="seguimiento-motivo" class="form-label">Motivo del seguimiento</label>
                       <textarea id="seguimiento-motivo" class="form-control textarea" placeholder="Explica por qué se requiere seguimiento..."></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 7: Contacto del Comedor -->
+              <div class="wizard-panel" id="wizard-step-7">
+                <div class="card">
+                  <h3 class="card-title">Contacto del Comedor</h3>
+                  <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">
+                    Registra los datos del responsable al cierre de la auditoría
+                  </p>
+
+                  <div class="form-group">
+                    <label class="form-label">¿Se pudo contactar con el responsable del comedor?</label>
+                    <div class="flex gap-2">
+                      <button type="button" class="btn btn-outline" data-contacto="si" onclick="updateContacto('si')">
+                        <i data-lucide="check"></i> Sí
+                      </button>
+                      <button type="button" class="btn btn-outline" data-contacto="no" onclick="updateContacto('no')">
+                        <i data-lucide="x"></i> No
+                      </button>
+                    </div>
+                  </div>
+
+                  <div id="contacto-details" class="hidden">
+                    <div class="form-group">
+                      <label for="contacto-nombre" class="form-label">Nombre del contacto</label>
+                      <input type="text" id="contacto-nombre" class="form-control" placeholder="Nombre completo">
+                    </div>
+
+                    <div class="form-group">
+                      <label for="contacto-cargo" class="form-label">Cargo</label>
+                      <input type="text" id="contacto-cargo" class="form-control" placeholder="Cargo o función">
+                    </div>
+
+                    <div class="form-group">
+                      <label for="contacto-observaciones" class="form-label">Observaciones del contacto</label>
+                      <textarea id="contacto-observaciones" class="form-control textarea" placeholder="Comentarios adicionales sobre el contacto..."></textarea>
+                    </div>
+                  </div>
+
+                  <div id="no-contacto-details" class="hidden">
+                    <div class="form-group">
+                      <label for="no-contacto-motivo" class="form-label">Motivo por el cual no se pudo contactar</label>
+                      <select id="no-contacto-motivo" class="form-control form-select">
+                        <option value="">Seleccione un motivo</option>
+                        <option value="ausente">Responsable ausente</option>
+                        <option value="ocupado">Responsable ocupado</option>
+                        <option value="no-disponible">No hay responsable disponible</option>
+                        <option value="otro">Otro motivo</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="no-contacto-observaciones" class="form-label">Observaciones</label>
+                      <textarea id="no-contacto-observaciones" class="form-control textarea" placeholder="Detalles adicionales..."></textarea>
                     </div>
                   </div>
                 </div>
@@ -1457,14 +1514,20 @@
                   </div>
                   
                   <div class="camera-controls" id="camera-controls" style="display: none;">
-                    <button class="btn btn-primary" onclick="tomarFoto()">
-                      <i data-lucide="camera"></i>
-                      Tomar Foto
-                    </button>
-                    <button class="btn btn-secondary" onclick="cerrarCamara()">
-                      <i data-lucide="x"></i>
-                      Cerrar Cámara
-                    </button>
+                    <div class="camera-context" id="camera-context">
+                      <i data-lucide="info"></i>
+                      <span>Captura general de la auditoría</span>
+                    </div>
+                    <div class="camera-buttons">
+                      <button class="btn btn-primary" onclick="tomarFoto()">
+                        <i data-lucide="camera"></i>
+                        Tomar Foto
+                      </button>
+                      <button class="btn btn-secondary" onclick="cerrarCamara()">
+                        <i data-lucide="x"></i>
+                        Cerrar Cámara
+                      </button>
+                    </div>
                   </div>
                   
                   <div class="photo-gallery" id="photo-gallery">
@@ -1495,7 +1558,6 @@
           </div>
         </div>
 
-        <!-- Historial Screen -->
         <div class="screen" id="historial-screen">
           <div class="card">
             <div class="card-header">
@@ -1516,6 +1578,31 @@
               </div>
               <div class="empty-state-title">No hay auditorías</div>
               <p>Las auditorías realizadas aparecerán aquí</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seguimientos Screen -->
+        <div class="screen" id="seguimientos-screen">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Seguimientos Programados</h2>
+              <button class="btn btn-outline btn-sm" onclick="loadSeguimientosScreen()">
+                <i data-lucide="refresh-cw"></i>
+                Actualizar
+              </button>
+            </div>
+
+            <div id="seguimientos-list">
+              <!-- Filled dynamically -->
+            </div>
+
+            <div id="seguimientos-empty" class="empty-state hidden">
+              <div class="empty-state-icon">
+                <i data-lucide="bell-off"></i>
+              </div>
+              <div class="empty-state-title">No hay seguimientos pendientes</div>
+              <p>Los seguimientos programados aparecerán en esta sección.</p>
             </div>
           </div>
         </div>
@@ -1587,7 +1674,12 @@
           <i data-lucide="history"></i>
           <span>Historial</span>
         </a>
-        
+
+        <a href="#seguimientos" class="nav-item" onclick="showScreen('seguimientos')">
+          <i data-lucide="bell"></i>
+          <span>Seguimientos</span>
+        </a>
+
         <a href="#reportes" class="nav-item" onclick="showScreen('reportes')">
           <i data-lucide="bar-chart-3"></i>
           <span>Reportes</span>
@@ -1617,11 +1709,13 @@
     let userOperations = [];
     let currentStep = 1;
     let cameraStream = null;
+    let currentPhotoContext = null;
     let wizardData = {
       usuarioDNI: null,
       usuarioNombre: null,
       operacionId: null,
       operacionName: null,
+      turno: '',
       personal: [],
       datosOperacion: null,
       fotos: [],
@@ -1636,27 +1730,118 @@
       noContactoObservaciones: '',
       personalVerificado: {},
       personalNombres: {},
+      personalAusencias: {},
       carnetsVerificados: {},
+      carnetsDetalles: {},
       evaluaciones: {},
       evaluacionesNotas: {},
       encuestas: {},
       observacionesPositivas: '',
       observacionesMejoras: '',
       recomendaciones: '',
+      otrasGestiones: '',
       seguimientoRequerido: null,
       seguimientoFecha: '',
-      seguimientoMotivo: ''
+      seguimientoMotivo: '',
+      seguimientoRecordatorio: ''
     };
+
+    const SEGUIMIENTO_ALERTS_KEY = 'auditoria_seguimiento_alertas';
+    let seguimientoRemindersMostrados = new Set();
+
+    function getWizardStateKey() {
+      if (!currentUser || !currentUser.dni) return null;
+      return `auditoria_wizard_state_${currentUser.dni}`;
+    }
+
+    function loadWizardStateRaw() {
+      const key = getWizardStateKey();
+      if (!key) return null;
+
+      try {
+        const stored = localStorage.getItem(key);
+        return stored ? JSON.parse(stored) : null;
+      } catch (error) {
+        console.warn('No se pudo cargar el estado guardado de la auditoría:', error);
+        return null;
+      }
+    }
+
+    function saveWizardState() {
+      const key = getWizardStateKey();
+      if (!key) return;
+
+      try {
+        const state = {
+          currentStep,
+          wizardData
+        };
+        localStorage.setItem(key, JSON.stringify(state));
+      } catch (error) {
+        console.warn('No se pudo guardar el estado de la auditoría:', error);
+      }
+    }
+
+    function clearWizardState() {
+      const key = getWizardStateKey();
+      if (!key) return;
+      try {
+        localStorage.removeItem(key);
+      } catch (error) {
+        console.warn('No se pudo limpiar el estado de la auditoría:', error);
+      }
+    }
+
+    function loadSeguimientoAlerts() {
+      try {
+        const stored = localStorage.getItem(SEGUIMIENTO_ALERTS_KEY);
+        seguimientoRemindersMostrados = new Set(stored ? JSON.parse(stored) : []);
+      } catch (error) {
+        seguimientoRemindersMostrados = new Set();
+      }
+    }
+
+    function persistSeguimientoAlerts() {
+      try {
+        localStorage.setItem(SEGUIMIENTO_ALERTS_KEY, JSON.stringify(Array.from(seguimientoRemindersMostrados)));
+      } catch (error) {
+        console.warn('No se pudo guardar el historial de recordatorios mostrados:', error);
+      }
+    }
+
+    loadSeguimientoAlerts();
+
+    let wizardResumePromptShown = false;
+
+    function parseDateSafe(value) {
+      if (!value) return null;
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function formatDateTime(value, fallback = 'Sin fecha registrada') {
+      const parsed = parseDateSafe(value);
+      return parsed ? parsed.toLocaleString('es-ES') : fallback;
+    }
+
+    function formatDate(value, fallback = 'Sin definir') {
+      const parsed = parseDateSafe(value);
+      return parsed ? parsed.toLocaleDateString('es-ES') : fallback;
+    }
+
+    function getSeguimientoOrdenTimestamp(auditoria) {
+      if (!auditoria) return Number.POSITIVE_INFINITY;
+      const prioridad = parseDateSafe(auditoria.seguimientoRecordatorio)
+        || parseDateSafe(auditoria.seguimientoFecha)
+        || parseDateSafe(auditoria.fechaHora);
+      return prioridad ? prioridad.getTime() : Number.POSITIVE_INFINITY;
+    }
 
     // Wizard steps configuration
     const wizardSteps = [
       {
         title: "Seleccionar Comedor",
-        description: "Elige el comedor que deseas auditar"
-      },
-      {
-        title: "Contacto del Comedor",
-        description: "Registra la información del contacto principal"
+        description: "Elige el comedor y define el turno a auditar"
       },
       {
         title: "Verificar Personal",
@@ -1664,7 +1849,7 @@
       },
       {
         title: "Revisar Carnets",
-        description: "Verifica el estado de los carnets sanitarios"
+        description: "Verifica y documenta los carnets sanitarios"
       },
       {
         title: "Evaluación del Comedor",
@@ -1677,6 +1862,10 @@
       {
         title: "Observaciones Generales",
         description: "Registra observaciones y recomendaciones"
+      },
+      {
+        title: "Contacto del Comedor",
+        description: "Registra la información del contacto principal"
       },
       {
         title: "Finalizar Auditoría",
@@ -1811,7 +2000,7 @@
         wizardData.operacionId = this.value;
         const selectedOption = this.options[this.selectedIndex];
         wizardData.operacionName = selectedOption.textContent;
-        
+
         if (wizardData.operacionId) {
           cargarPersonal(wizardData.operacionId);
           cargarDatosOperacion(wizardData.operacionName);
@@ -1819,7 +2008,315 @@
         } else {
           document.getElementById('resumen-comedor').classList.add('hidden');
         }
+
+        saveWizardState();
       });
+
+      document.getElementById('observaciones-positivas').addEventListener('input', function() {
+        wizardData.observacionesPositivas = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('observaciones-mejoras').addEventListener('input', function() {
+        wizardData.observacionesMejoras = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('recomendaciones').addEventListener('input', function() {
+        wizardData.recomendaciones = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('otras-gestiones').addEventListener('input', function() {
+        wizardData.otrasGestiones = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('seguimiento-fecha').addEventListener('change', function() {
+        wizardData.seguimientoFecha = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('seguimiento-recordatorio').addEventListener('change', function() {
+        wizardData.seguimientoRecordatorio = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('seguimiento-motivo').addEventListener('input', function() {
+        wizardData.seguimientoMotivo = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('contacto-nombre').addEventListener('input', function() {
+        wizardData.contactoNombre = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('contacto-cargo').addEventListener('input', function() {
+        wizardData.contactoCargo = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('contacto-observaciones').addEventListener('input', function() {
+        wizardData.contactoObservaciones = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('no-contacto-motivo').addEventListener('change', function() {
+        wizardData.noContactoMotivo = this.value;
+        saveWizardState();
+      });
+
+      document.getElementById('no-contacto-observaciones').addEventListener('input', function() {
+        wizardData.noContactoObservaciones = this.value;
+        saveWizardState();
+      });
+    }
+
+    function mergeWizardData(base, saved) {
+      return {
+        ...base,
+        ...saved,
+        personalVerificado: { ...(base.personalVerificado || {}), ...(saved.personalVerificado || {}) },
+        personalNombres: { ...(base.personalNombres || {}), ...(saved.personalNombres || {}) },
+        personalAusencias: { ...(base.personalAusencias || {}), ...(saved.personalAusencias || {}) },
+        carnetsVerificados: { ...(base.carnetsVerificados || {}), ...(saved.carnetsVerificados || {}) },
+        carnetsDetalles: { ...(base.carnetsDetalles || {}), ...(saved.carnetsDetalles || {}) },
+        evaluaciones: { ...(base.evaluaciones || {}), ...(saved.evaluaciones || {}) },
+        evaluacionesNotas: { ...(base.evaluacionesNotas || {}), ...(saved.evaluacionesNotas || {}) },
+        encuestas: { ...(base.encuestas || {}), ...(saved.encuestas || {}) },
+        fotos: saved.fotos || base.fotos,
+        personal: saved.personal || base.personal,
+        datosOperacion: saved.datosOperacion || base.datosOperacion
+      };
+    }
+
+    function restoreWizardStateFromStorage(showMessage = true) {
+      const savedState = loadWizardStateRaw();
+      if (!savedState || !savedState.wizardData) {
+        currentStep = 1;
+        return false;
+      }
+
+      if (savedState.wizardData.usuarioDNI && currentUser && savedState.wizardData.usuarioDNI !== currentUser.dni) {
+        return false;
+      }
+
+      wizardData = mergeWizardData(wizardData, savedState.wizardData);
+      if (currentUser) {
+        wizardData.usuarioDNI = currentUser.dni;
+        wizardData.usuarioNombre = currentUser.nombreCompleto;
+      }
+
+      currentStep = Math.min(savedState.currentStep || 1, wizardSteps.length);
+
+      if (showMessage) {
+        showToast('Se recuperó una auditoría en progreso', 'info');
+      }
+
+      return true;
+    }
+
+    function applyTurnoUI() {
+      document.querySelectorAll('[data-turno]').forEach(btn => {
+        if (btn.getAttribute('data-turno') === wizardData.turno) {
+          btn.classList.remove('btn-outline');
+          btn.classList.add('btn-primary');
+        } else {
+          btn.classList.remove('btn-primary');
+          btn.classList.add('btn-outline');
+        }
+      });
+    }
+
+    function isTurnoEnHorario(turno, referenceDate = new Date()) {
+      const hour = referenceDate.getHours();
+
+      if (turno === 'TM') {
+        return hour >= 7 && hour < 16;
+      }
+
+      if (turno === 'TT_TN') {
+        return hour >= 16 || hour < 7;
+      }
+
+      return true;
+    }
+
+    function selectTurno(turno) {
+      const mensajes = {
+        TM: 'El turno TM solo puede auditarse entre las 07:00 y las 16:00 hs.',
+        TT_TN: 'El turno TT / TN solo puede auditarse entre las 16:00 y las 07:00 hs.'
+      };
+
+      if (!isTurnoEnHorario(turno)) {
+        showToast(mensajes[turno] || 'Horario no válido para el turno seleccionado', 'error');
+        return;
+      }
+
+      wizardData.turno = turno;
+      if (!wizardData.fechaHora) {
+        wizardData.fechaHora = new Date().toISOString();
+      }
+
+      applyTurnoUI();
+      saveWizardState();
+    }
+
+    function applySeguimientoUI() {
+      document.querySelectorAll('[data-seguimiento]').forEach(btn => {
+        if (btn.getAttribute('data-seguimiento') === wizardData.seguimientoRequerido) {
+          btn.classList.remove('btn-outline');
+          btn.classList.add('btn-success');
+        } else {
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-outline');
+        }
+      });
+
+      if (wizardData.seguimientoRequerido === 'si') {
+        document.getElementById('seguimiento-details').classList.remove('hidden');
+      } else {
+        document.getElementById('seguimiento-details').classList.add('hidden');
+      }
+    }
+
+    function applyContactoUI() {
+      document.querySelectorAll('[data-contacto]').forEach(btn => {
+        if (btn.getAttribute('data-contacto') === wizardData.contactoRealizado) {
+          btn.classList.remove('btn-outline');
+          btn.classList.add('btn-success');
+        } else {
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-outline');
+        }
+      });
+
+      if (wizardData.contactoRealizado === 'si') {
+        document.getElementById('contacto-details').classList.remove('hidden');
+        document.getElementById('no-contacto-details').classList.add('hidden');
+      } else if (wizardData.contactoRealizado === 'no') {
+        document.getElementById('contacto-details').classList.add('hidden');
+        document.getElementById('no-contacto-details').classList.remove('hidden');
+      } else {
+        document.getElementById('contacto-details').classList.add('hidden');
+        document.getElementById('no-contacto-details').classList.add('hidden');
+      }
+    }
+
+    function applyWizardStateToUI() {
+      const comedorSelect = document.getElementById('comedor-select');
+      if (comedorSelect) {
+        comedorSelect.value = wizardData.operacionId || '';
+      }
+
+      if (wizardData.operacionId) {
+        mostrarResumenComedor(wizardData.operacionId);
+        if (!wizardData.personal || wizardData.personal.length === 0) {
+          cargarPersonal(wizardData.operacionId);
+        }
+      } else {
+        document.getElementById('resumen-comedor').classList.add('hidden');
+      }
+
+      applyTurnoUI();
+
+      document.getElementById('observaciones-positivas').value = wizardData.observacionesPositivas || '';
+      document.getElementById('observaciones-mejoras').value = wizardData.observacionesMejoras || '';
+      document.getElementById('recomendaciones').value = wizardData.recomendaciones || '';
+      document.getElementById('otras-gestiones').value = wizardData.otrasGestiones || '';
+      document.getElementById('seguimiento-fecha').value = wizardData.seguimientoFecha || '';
+      document.getElementById('seguimiento-recordatorio').value = wizardData.seguimientoRecordatorio || '';
+      document.getElementById('seguimiento-motivo').value = wizardData.seguimientoMotivo || '';
+
+      document.getElementById('contacto-nombre').value = wizardData.contactoNombre || '';
+      document.getElementById('contacto-cargo').value = wizardData.contactoCargo || '';
+      document.getElementById('contacto-observaciones').value = wizardData.contactoObservaciones || '';
+      document.getElementById('no-contacto-motivo').value = wizardData.noContactoMotivo || '';
+      document.getElementById('no-contacto-observaciones').value = wizardData.noContactoObservaciones || '';
+
+      applySeguimientoUI();
+      applyContactoUI();
+
+      if (wizardData.fotos && wizardData.fotos.length > 0) {
+        updatePhotoGallery();
+      }
+
+      updateCameraContextUI();
+    }
+
+    function loadStepContentForCurrentStep() {
+      switch (currentStep) {
+        case 2:
+          loadPersonalStep();
+          break;
+        case 3:
+          loadCarnetsStep();
+          break;
+        case 4:
+          loadEvaluacionStep();
+          break;
+        case 5:
+          loadEncuestaStep();
+          break;
+        case 6:
+          loadObservacionesStep();
+          break;
+        case 7:
+          loadContactoStep();
+          break;
+        case 8:
+          loadFinalizarStep();
+          break;
+      }
+    }
+
+    function prepareWizardScreen() {
+      let restored = false;
+
+      if (!wizardData.operacionId) {
+        const savedState = loadWizardStateRaw();
+        const hasSavedAudit = savedState && savedState.wizardData && savedState.wizardData.operacionId;
+
+        if (hasSavedAudit) {
+          let shouldRestore = true;
+          if (!wizardResumePromptShown) {
+            shouldRestore = confirm('Se encontró una auditoría en progreso. ¿Desea continuarla?');
+            wizardResumePromptShown = true;
+          }
+
+          if (shouldRestore) {
+            restored = restoreWizardStateFromStorage(false);
+          } else {
+            clearWizardState();
+            resetWizard();
+          }
+        } else {
+          resetWizard();
+        }
+      } else {
+        restored = true;
+      }
+
+      if (!restored && wizardData.operacionId) {
+        restored = restoreWizardStateFromStorage(false);
+      }
+
+      if (!restored && !wizardData.operacionId) {
+        resetWizard();
+      }
+
+      applyWizardStateToUI();
+      updateWizardUI();
+      loadStepContentForCurrentStep();
+    }
+
+    function confirmResetWizard() {
+      if (confirm('¿Desea iniciar una nueva auditoría? Se perderán los cambios no guardados.')) {
+        resetWizard();
+        applyWizardStateToUI();
+        updateWizardUI();
+      }
     }
 
     // Login Function
@@ -1908,7 +2405,14 @@
           // Populate comedor selects with user's operations
           populateComedorSelect();
           populateReporteComedorSelect();
-          
+
+          const restored = restoreWizardStateFromStorage(false);
+          if (restored) {
+            showToast('Se recuperó una auditoría en progreso', 'info');
+          } else {
+            resetWizard();
+          }
+
           // Load dashboard data
           loadDashboardData();
           
@@ -1975,11 +2479,14 @@
       if (confirm('¿Está seguro que desea cerrar sesión?')) {
         currentUser = null;
         userOperations = [];
+        clearWizardState();
+        wizardResumePromptShown = false;
         wizardData = {
           usuarioDNI: null,
           usuarioNombre: null,
           operacionId: null,
           operacionName: null,
+          turno: '',
           personal: [],
           datosOperacion: null,
           fotos: [],
@@ -1994,16 +2501,20 @@
           noContactoObservaciones: '',
           personalVerificado: {},
           personalNombres: {},
+          personalAusencias: {},
           carnetsVerificados: {},
+          carnetsDetalles: {},
           evaluaciones: {},
           evaluacionesNotas: {},
           encuestas: {},
           observacionesPositivas: '',
           observacionesMejoras: '',
           recomendaciones: '',
+          otrasGestiones: '',
           seguimientoRequerido: null,
           seguimientoFecha: '',
-          seguimientoMotivo: ''
+          seguimientoMotivo: '',
+          seguimientoRecordatorio: ''
         };
         
         document.getElementById('app-screen').classList.remove('active');
@@ -2040,9 +2551,11 @@
       } else if (screenName === 'reportes') {
         loadReportesScreen();
       } else if (screenName === 'nueva-auditoria') {
-        resetWizard();
+        prepareWizardScreen();
       } else if (screenName === 'dashboard') {
         loadDashboardData();
+      } else if (screenName === 'seguimientos') {
+        loadSeguimientosScreen();
       }
       
       // Initialize icons
@@ -2071,6 +2584,7 @@
           
           updateDashboardStats(userAuditorias);
           updateRecentAudits(userAuditorias);
+          checkSeguimientoRecordatorios(userAuditorias);
         })
         .catch(error => {
           console.error('Error loading dashboard data:', error);
@@ -2109,7 +2623,7 @@
       const recentAudits = auditorias
         .sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora))
         .slice(0, 5);
-      
+
       const container = document.getElementById('recent-audits-list');
       const emptyState = document.getElementById('recent-audits-empty');
       
@@ -2152,19 +2666,140 @@
       }, 100);
     }
 
+    function checkSeguimientoRecordatorios(auditorias) {
+      const now = new Date();
+
+      auditorias.forEach(auditoria => {
+        if (!auditoria.id) {
+          return;
+        }
+
+        if (auditoria.seguimientoRequerido !== 'si' || !auditoria.seguimientoRecordatorio) {
+          return;
+        }
+
+        const recordatorio = parseDateSafe(auditoria.seguimientoRecordatorio);
+        if (!recordatorio) {
+          return;
+        }
+
+        if (recordatorio <= now && !seguimientoRemindersMostrados.has(auditoria.id)) {
+          const operacion = userOperations.find(op => op.id === auditoria.operacionId);
+          const operacionNombre = operacion ? operacion.nombre : 'Comedor sin nombre';
+          showToast(`Recordatorio de seguimiento para ${operacionNombre}`, 'warning');
+          seguimientoRemindersMostrados.add(auditoria.id);
+        }
+      });
+
+      persistSeguimientoAlerts();
+    }
+
+    function loadSeguimientosScreen() {
+      if (!currentUser) return;
+
+      showLoading();
+
+      const userOperationIds = userOperations.map(op => op.id);
+
+      database.ref('auditorias').orderByChild('usuarioDNI').equalTo(currentUser.dni).once('value')
+        .then(snapshot => {
+          const auditorias = snapshot.val() || {};
+
+          const seguimientos = Object.keys(auditorias)
+            .map(key => ({ id: key, ...auditorias[key] }))
+            .filter(auditoria => userOperationIds.includes(auditoria.operacionId))
+            .filter(auditoria => auditoria.seguimientoRequerido === 'si');
+
+          seguimientos.sort((a, b) => getSeguimientoOrdenTimestamp(a) - getSeguimientoOrdenTimestamp(b));
+
+          updateSeguimientosList(seguimientos);
+          checkSeguimientoRecordatorios(seguimientos);
+        })
+        .catch(error => {
+          console.error('Error al cargar seguimientos:', error);
+          showToast('No se pudieron cargar los seguimientos', 'error');
+        })
+        .finally(() => {
+          hideLoading();
+        });
+    }
+
+    function updateSeguimientosList(seguimientos) {
+      const container = document.getElementById('seguimientos-list');
+      const emptyState = document.getElementById('seguimientos-empty');
+
+      if (!container || !emptyState) return;
+
+      if (seguimientos.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      const now = new Date();
+      container.innerHTML = seguimientos.map(auditoria => {
+        const operacion = userOperations.find(op => op.id === auditoria.operacionId);
+        const operacionNombre = operacion ? operacion.nombre : 'Comedor sin nombre';
+        const fechaAuditoria = formatDateTime(auditoria.fechaHora, 'Sin fecha registrada');
+        const fechaSeguimiento = auditoria.seguimientoFecha ? formatDate(auditoria.seguimientoFecha, 'Sin definir') : 'Sin definir';
+        const recordatorioDate = parseDateSafe(auditoria.seguimientoRecordatorio);
+        const recordatorioTexto = recordatorioDate ? recordatorioDate.toLocaleString('es-ES') : 'No programado';
+        const recordatorioVencido = recordatorioDate ? recordatorioDate <= now : false;
+
+        return `
+          <div class="list-item">
+            <div class="list-item-header">
+              <div class="list-item-title">${operacionNombre}</div>
+              <div class="flex gap-2" style="align-items: center;">
+                <span class="badge badge-info">Auditoría: ${fechaAuditoria}</span>
+                ${recordatorioVencido ? '<span class="badge badge-warning">Recordatorio vencido</span>' : ''}
+              </div>
+            </div>
+            <div class="list-item-content">
+              <p><strong>Seguimiento:</strong> ${fechaSeguimiento}</p>
+              <p><strong>Recordatorio:</strong> ${recordatorioTexto}</p>
+              ${auditoria.seguimientoMotivo ? `<p><strong>Motivo:</strong> ${auditoria.seguimientoMotivo}</p>` : ''}
+            </div>
+            <div class="list-item-actions">
+              <button class="btn btn-outline btn-sm" onclick="verAuditoria('${auditoria.id}')">
+                <i data-lucide="eye"></i>
+                Ver auditoría
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="generarReporteAuditoria('${auditoria.id}')">
+                <i data-lucide="file-text"></i>
+                Generar reporte
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 100);
+    }
+
     // Wizard Functions
-    function resetWizard() {
+    function resetWizard(options = {}) {
+      const { preserveStorage = false } = options;
+
       currentStep = 1;
-      
+      wizardResumePromptShown = false;
+
       // Reset wizard data (keep user info)
       const userDNI = wizardData.usuarioDNI;
       const userNombre = wizardData.usuarioNombre;
-      
+
       wizardData = {
         usuarioDNI: userDNI,
         usuarioNombre: userNombre,
         operacionId: null,
         operacionName: null,
+        turno: '',
         personal: [],
         datosOperacion: null,
         fotos: [],
@@ -2179,22 +2814,62 @@
         noContactoObservaciones: '',
         personalVerificado: {},
         personalNombres: {},
+        personalAusencias: {},
         carnetsVerificados: {},
+        carnetsDetalles: {},
         evaluaciones: {},
         evaluacionesNotas: {},
         encuestas: {},
         observacionesPositivas: '',
         observacionesMejoras: '',
         recomendaciones: '',
+        otrasGestiones: '',
         seguimientoRequerido: null,
         seguimientoFecha: '',
-        seguimientoMotivo: ''
+        seguimientoMotivo: '',
+        seguimientoRecordatorio: ''
       };
-      
+
       // Reset form elements
-      document.getElementById('comedor-select').value = '';
-      document.getElementById('resumen-comedor').classList.add('hidden');
-      
+      const comedorSelect = document.getElementById('comedor-select');
+      if (comedorSelect) {
+        comedorSelect.value = '';
+      }
+      const resumenComedor = document.getElementById('resumen-comedor');
+      if (resumenComedor) {
+        resumenComedor.classList.add('hidden');
+      }
+
+      document.querySelectorAll('[data-turno]').forEach(btn => {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline');
+      });
+
+      const resetInputs = [
+        'observaciones-positivas',
+        'observaciones-mejoras',
+        'recomendaciones',
+        'otras-gestiones',
+        'seguimiento-fecha',
+        'seguimiento-recordatorio',
+        'seguimiento-motivo',
+        'contacto-nombre',
+        'contacto-cargo',
+        'contacto-observaciones',
+        'no-contacto-motivo',
+        'no-contacto-observaciones'
+      ];
+
+      resetInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        if (input.tagName === 'SELECT' || input.tagName === 'INPUT') {
+          input.value = '';
+        } else {
+          input.value = '';
+        }
+      });
+
       // Reset contact buttons
       document.querySelectorAll('[data-contacto]').forEach(btn => {
         btn.classList.remove('btn-success');
@@ -2202,21 +2877,35 @@
       });
       document.getElementById('contacto-details').classList.add('hidden');
       document.getElementById('no-contacto-details').classList.add('hidden');
-      
+
       // Reset seguimiento buttons
       document.querySelectorAll('[data-seguimiento]').forEach(btn => {
         btn.classList.remove('btn-success');
         btn.classList.add('btn-outline');
       });
       document.getElementById('seguimiento-details').classList.add('hidden');
-      
+
       // Clear photo gallery
-      document.getElementById('photo-gallery').innerHTML = '';
-      document.getElementById('no-photos-message').style.display = 'block';
-      
+      const photoGallery = document.getElementById('photo-gallery');
+      if (photoGallery) {
+        photoGallery.innerHTML = '';
+      }
+      const noPhotosMessage = document.getElementById('no-photos-message');
+      if (noPhotosMessage) {
+        noPhotosMessage.style.display = 'block';
+      }
+
       // Close camera if open
       cerrarCamara();
-      
+      currentPhotoContext = null;
+      updateCameraContextUI();
+
+      if (!preserveStorage) {
+        clearWizardState();
+      } else {
+        saveWizardState();
+      }
+
       updateWizardUI();
     }
 
@@ -2257,7 +2946,7 @@
       
       // Show/hide floating camera button
       const floatingBtn = document.getElementById('floating-camera-btn');
-      if (currentStep >= 3 && currentStep <= 8) {
+      if (currentStep >= 4 && currentStep <= 8) {
         floatingBtn.style.display = 'flex';
       } else {
         floatingBtn.style.display = 'none';
@@ -2279,19 +2968,24 @@
       if (currentStep < wizardSteps.length) {
         currentStep++;
         updateWizardUI();
-        
+
         // Load step-specific content
-        if (currentStep === 3) {
+        if (currentStep === 2) {
           loadPersonalStep();
-        } else if (currentStep === 4) {
+        } else if (currentStep === 3) {
           loadCarnetsStep();
-        } else if (currentStep === 5) {
+        } else if (currentStep === 4) {
           loadEvaluacionStep();
-        } else if (currentStep === 6) {
+        } else if (currentStep === 5) {
           loadEncuestaStep();
+        } else if (currentStep === 6) {
+          loadObservacionesStep();
+        } else if (currentStep === 7) {
+          loadContactoStep();
         } else if (currentStep === 8) {
           loadFinalizarStep();
         }
+        saveWizardState();
       } else {
         // Finalizar auditoría
         finalizarAuditoria();
@@ -2302,6 +2996,7 @@
       if (currentStep > 1) {
         currentStep--;
         updateWizardUI();
+        saveWizardState();
       }
     }
 
@@ -2312,69 +3007,152 @@
             showToast('Por favor seleccione un comedor', 'error');
             return false;
           }
+
+          if (!wizardData.turno) {
+            showToast('Por favor seleccione el turno que está auditando', 'error');
+            return false;
+          }
+
+          if (!isTurnoEnHorario(wizardData.turno)) {
+            showToast('El turno seleccionado no puede auditarse fuera de su horario establecido', 'error');
+            return false;
+          }
           break;
-          
+
         case 2:
+          const personalList = Array.isArray(wizardData.personal) ? wizardData.personal : [];
+          if (personalList.length === 0) {
+            showToast('No hay personal cargado para este comedor', 'error');
+            return false;
+          }
+
+          for (const persona of personalList) {
+            const estado = wizardData.personalVerificado[persona.dni];
+            if (!estado) {
+              showToast(`Confirma el presentismo de ${persona.nombre}`, 'error');
+              return false;
+            }
+
+            if (estado === 'ausente') {
+              const ausencia = wizardData.personalAusencias[persona.dni] || {};
+              if (!ausencia.observacion || !ausencia.observacion.trim()) {
+                showToast(`Ingresa una observación para la ausencia de ${persona.nombre}`, 'error');
+                return false;
+              }
+
+              if (!ausencia.reemplazado) {
+                showToast(`Indica si ${persona.nombre} fue reemplazado`, 'error');
+                return false;
+              }
+
+              if (ausencia.reemplazado === 'si' && (!ausencia.reemplazante || !ausencia.reemplazante.trim())) {
+                showToast(`Detalla quién reemplazó a ${persona.nombre}`, 'error');
+                return false;
+              }
+            }
+          }
+          break;
+
+        case 3: {
+          const personalList = Array.isArray(wizardData.personal) ? wizardData.personal : [];
+          const presentes = personalList.filter(persona => wizardData.personalVerificado[persona.dni] === 'presente');
+          for (const persona of presentes) {
+            const estado = wizardData.carnetsVerificados[persona.dni];
+            if (!estado) {
+              showToast(`Selecciona el estado del carnet de ${persona.nombre}`, 'error');
+              return false;
+            }
+
+            const detalle = wizardData.carnetsDetalles[persona.dni] || {};
+            if (estado !== 'no-presenta') {
+              if (!detalle.numero || !detalle.numero.trim()) {
+                showToast(`Registra el número de carnet de ${persona.nombre}`, 'error');
+                return false;
+              }
+              if (!detalle.vencimiento) {
+                showToast(`Registra la fecha de vencimiento del carnet de ${persona.nombre}`, 'error');
+                return false;
+              }
+            } else if (!detalle.observaciones || !detalle.observaciones.trim()) {
+              showToast(`Describe las observaciones sobre el carnet de ${persona.nombre}`, 'error');
+              return false;
+            }
+          }
+          break;
+        }
+
+        case 6:
+          wizardData.observacionesPositivas = document.getElementById('observaciones-positivas').value;
+          wizardData.observacionesMejoras = document.getElementById('observaciones-mejoras').value;
+          wizardData.recomendaciones = document.getElementById('recomendaciones').value;
+          wizardData.otrasGestiones = document.getElementById('otras-gestiones').value;
+          wizardData.seguimientoFecha = document.getElementById('seguimiento-fecha').value;
+          wizardData.seguimientoMotivo = document.getElementById('seguimiento-motivo').value;
+          wizardData.seguimientoRecordatorio = document.getElementById('seguimiento-recordatorio').value;
+
+          if (wizardData.seguimientoRequerido === null) {
+            showToast('Por favor indique si se requiere seguimiento', 'error');
+            return false;
+          }
+
+          if (wizardData.seguimientoRequerido === 'si') {
+            if (!wizardData.seguimientoFecha) {
+              showToast('Por favor ingrese la fecha sugerida para seguimiento', 'error');
+              return false;
+            }
+
+            const motivoSeguimiento = (wizardData.seguimientoMotivo || '').trim();
+            wizardData.seguimientoMotivo = motivoSeguimiento;
+            if (!motivoSeguimiento) {
+              showToast('Por favor ingrese el motivo del seguimiento', 'error');
+              return false;
+            }
+
+            if (!wizardData.seguimientoRecordatorio) {
+              showToast('Configura un recordatorio para el seguimiento', 'error');
+              return false;
+            }
+          }
+
+          saveWizardState();
+          break;
+
+        case 7:
           if (wizardData.contactoRealizado === null) {
             showToast('Por favor indique si se pudo contactar con el responsable', 'error');
             return false;
           }
-          
+
           if (wizardData.contactoRealizado === 'si') {
             wizardData.contactoNombre = document.getElementById('contacto-nombre').value;
             wizardData.contactoCargo = document.getElementById('contacto-cargo').value;
             wizardData.contactoObservaciones = document.getElementById('contacto-observaciones').value;
-            
-            if (!wizardData.contactoNombre.trim()) {
+
+            if (!(wizardData.contactoNombre || '').trim()) {
               showToast('Por favor ingrese el nombre del contacto', 'error');
               return false;
             }
           } else {
             wizardData.noContactoMotivo = document.getElementById('no-contacto-motivo').value;
             wizardData.noContactoObservaciones = document.getElementById('no-contacto-observaciones').value;
-            
+
             if (!wizardData.noContactoMotivo) {
               showToast('Por favor seleccione el motivo por el cual no se pudo contactar', 'error');
               return false;
             }
           }
-          break;
-          
-        case 7:
-          // Save observaciones generales
-          wizardData.observacionesPositivas = document.getElementById('observaciones-positivas').value;
-          wizardData.observacionesMejoras = document.getElementById('observaciones-mejoras').value;
-          wizardData.recomendaciones = document.getElementById('recomendaciones').value;
-          
-          if (wizardData.seguimientoRequerido === null) {
-            showToast('Por favor indique si se requiere seguimiento', 'error');
-            return false;
-          }
-          
-          if (wizardData.seguimientoRequerido === 'si') {
-            wizardData.seguimientoFecha = document.getElementById('seguimiento-fecha').value;
-            wizardData.seguimientoMotivo = document.getElementById('seguimiento-motivo').value;
-            
-            if (!wizardData.seguimientoFecha) {
-              showToast('Por favor ingrese la fecha sugerida para seguimiento', 'error');
-              return false;
-            }
-            
-            if (!wizardData.seguimientoMotivo.trim()) {
-              showToast('Por favor ingrese el motivo del seguimiento', 'error');
-              return false;
-            }
-          }
+
+          saveWizardState();
           break;
       }
-      
+
       return true;
     }
 
     // Contact functions
     function updateContacto(value) {
       wizardData.contactoRealizado = value;
-      
+
       // Update button styles
       document.querySelectorAll('[data-contacto]').forEach(btn => {
         if (btn.getAttribute('data-contacto') === value) {
@@ -2394,11 +3172,13 @@
         document.getElementById('contacto-details').classList.add('hidden');
         document.getElementById('no-contacto-details').classList.remove('hidden');
       }
+
+      saveWizardState();
     }
 
     function updateSeguimiento(value) {
       wizardData.seguimientoRequerido = value;
-      
+
       // Update button styles
       document.querySelectorAll('[data-seguimiento]').forEach(btn => {
         if (btn.getAttribute('data-seguimiento') === value) {
@@ -2416,6 +3196,8 @@
       } else {
         document.getElementById('seguimiento-details').classList.add('hidden');
       }
+
+      saveWizardState();
     }
 
     // Load operation data
@@ -2424,7 +3206,10 @@
         nombre: operacionName,
         fechaHora: new Date().toISOString()
       };
-      wizardData.fechaHora = wizardData.datosOperacion.fechaHora;
+      if (!wizardData.fechaHora) {
+        wizardData.fechaHora = wizardData.datosOperacion.fechaHora;
+      }
+      saveWizardState();
     }
 
     function mostrarResumenComedor(operacionId) {
@@ -2463,14 +3248,16 @@
         wizardData.personal = [];
         return;
       }
-      
+
       wizardData.personal = operacion.operacionData.personal || [];
+      saveWizardState();
     }
 
     function loadPersonalStep() {
       const container = document.getElementById('personal-list');
-      
-      if (wizardData.personal.length === 0) {
+      const personalList = Array.isArray(wizardData.personal) ? wizardData.personal : [];
+
+      if (personalList.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">
@@ -2482,42 +3269,75 @@
         `;
         return;
       }
-      
-    
+
       container.innerHTML = `
         <div class="card">
           <h3 class="card-title">Verificación de Personal</h3>
           <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1.5rem;">
-            Confirma la presencia del personal en el comedor
+            Confirma la presencia del personal en el comedor y registra observaciones cuando corresponda
           </p>
-          
-          ${wizardData.personal.map(persona => `
 
-            ${console.log(persona)} 
-            <div class="list-item">
-              <div class="list-item-header">
-                <div class="list-item-title">${persona.nombre} </div>
-                <span class="badge badge-secondary">DNI: ${persona.dni}</span>
+          ${personalList.map(persona => {
+            const status = wizardData.personalVerificado[persona.dni];
+            const ausencia = wizardData.personalAusencias[persona.dni] || {};
+            const reemplazoSi = ausencia.reemplazado === 'si';
+            const reemplazoNo = ausencia.reemplazado === 'no';
+
+            return `
+              <div class="list-item">
+                <div class="list-item-header">
+                  <div class="list-item-title">${persona.nombre}</div>
+                  <span class="badge badge-secondary">DNI: ${persona.dni}</span>
+                </div>
+                <div class="list-item-content">
+                  ${persona.cat_descrip || 'Cargo no especificado'}
+                </div>
+                <div class="list-item-actions">
+                  <button class="btn ${status === 'presente' ? 'btn-success' : 'btn-outline'}"
+                          onclick="updatePersonalStatus('${persona.dni}', 'presente')">
+                    <i data-lucide="check"></i> Presente
+                  </button>
+                  <button class="btn ${status === 'ausente' ? 'btn-destructive' : 'btn-outline'}"
+                          onclick="updatePersonalStatus('${persona.dni}', 'ausente')">
+                    <i data-lucide="x"></i> Ausente
+                  </button>
+                </div>
+                ${status === 'ausente' ? `
+                  <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label">Observaciones del ausente</label>
+                    <textarea class="form-control textarea"
+                              placeholder="Describe el motivo de la ausencia o detalles relevantes"
+                              oninput="updatePersonalAusencia('${persona.dni}', 'observacion', this.value)">${ausencia.observacion || ''}</textarea>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">¿Fue reemplazado?</label>
+                    <div class="flex gap-2">
+                      <button type="button" class="btn ${reemplazoSi ? 'btn-success' : 'btn-outline'}"
+                              onclick="setPersonalReemplazo('${persona.dni}', 'si')">
+                        <i data-lucide="user-plus"></i> Sí
+                      </button>
+                      <button type="button" class="btn ${reemplazoNo ? 'btn-secondary' : 'btn-outline'}"
+                              onclick="setPersonalReemplazo('${persona.dni}', 'no')">
+                        <i data-lucide="user-x"></i> No
+                      </button>
+                    </div>
+                  </div>
+                  ${reemplazoSi ? `
+                    <div class="form-group">
+                      <label class="form-label">Nombre del reemplazo</label>
+                      <input type="text" class="form-control"
+                             placeholder="Indica quién cubrió la posición"
+                             value="${ausencia.reemplazante || ''}"
+                             oninput="updatePersonalAusencia('${persona.dni}', 'reemplazante', this.value)">
+                    </div>
+                  ` : ''}
+                ` : ''}
               </div>
-              <div class="list-item-content">
-                ${persona.cat_descrip || 'Cargo no especificado'}
-              </div>
-              <div class="list-item-actions">
-               
-                <button class="btn ${wizardData.personalVerificado[persona.dni] === 'presente' ? 'btn-success' : 'btn-outline'}"
-                        onclick="updatePersonalStatus('${persona.dni}', 'presente')">
-                  <i data-lucide="check"></i> Presente
-                </button>
-                <button class="btn ${wizardData.personalVerificado[persona.dni] === 'ausente' ? 'btn-destructive' : 'btn-outline'}"
-                        onclick="updatePersonalStatus('${persona.dni}', 'ausente')">
-                  <i data-lucide="x"></i> Ausente
-                </button>
-              </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       `;
-      
+
       // Initialize icons
       setTimeout(() => {
         if (typeof lucide !== 'undefined') {
@@ -2528,17 +3348,69 @@
 
     function updatePersonalStatus(dni, status) {
       wizardData.personalVerificado[dni] = status;
+      if (status === 'ausente') {
+        ensurePersonalAusencia(dni);
+      } else {
+        delete wizardData.personalAusencias[dni];
+      }
+      saveWizardState();
       loadPersonalStep(); // Refresh the display
     }
 
     function updatePersonalNombre(dni, nombre) {
       wizardData.personalNombres[dni] = nombre;
+      saveWizardState();
+    }
+
+    function ensurePersonalAusencia(dni) {
+      if (!wizardData.personalAusencias[dni]) {
+        wizardData.personalAusencias[dni] = {
+          observacion: '',
+          reemplazado: null,
+          reemplazante: ''
+        };
+      }
+      return wizardData.personalAusencias[dni];
+    }
+
+    function updatePersonalAusencia(dni, field, value) {
+      const ausencia = ensurePersonalAusencia(dni);
+      ausencia[field] = value;
+      saveWizardState();
+    }
+
+    function setPersonalReemplazo(dni, value) {
+      const ausencia = ensurePersonalAusencia(dni);
+      ausencia.reemplazado = value;
+      if (value !== 'si') {
+        ausencia.reemplazante = '';
+      }
+      saveWizardState();
+      loadPersonalStep();
+    }
+
+    function ensureCarnetDetalle(dni) {
+      if (!wizardData.carnetsDetalles[dni]) {
+        wizardData.carnetsDetalles[dni] = {
+          numero: '',
+          vencimiento: '',
+          observaciones: ''
+        };
+      }
+      return wizardData.carnetsDetalles[dni];
+    }
+
+    function updateCarnetDetalle(dni, field, value) {
+      const detalle = ensureCarnetDetalle(dni);
+      detalle[field] = value;
+      saveWizardState();
     }
 
     function loadCarnetsStep() {
       const container = document.getElementById('carnets-list');
-      
-      if (wizardData.personal.length === 0) {
+      const personalList = Array.isArray(wizardData.personal) ? wizardData.personal : [];
+
+      if (personalList.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">
@@ -2550,47 +3422,85 @@
         `;
         return;
       }
-      
+
       container.innerHTML = `
         <div class="card">
           <h3 class="card-title">Verificación de Carnets Sanitarios</h3>
           <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1.5rem;">
             Verifica el estado de los carnets sanitarios del personal
           </p>
-          
-          ${wizardData.personal.map(persona => `
-            <div class="list-item">
-              <div class="list-item-header">
-                <div class="list-item-title">${persona.nombre}</div>
-                <span class="badge ${wizardData.personalVerificado[persona.dni] === 'presente' ? 'badge-success' : 'badge-secondary'}">
-                  ${wizardData.personalVerificado[persona.dni] === 'presente' ? 'Presente' : 'Estado no verificado'}
-                </span>
+
+          ${personalList.map(persona => {
+            const estaPresente = wizardData.personalVerificado[persona.dni] === 'presente';
+            const status = wizardData.carnetsVerificados[persona.dni] || '';
+            const detalle = wizardData.carnetsDetalles[persona.dni] || {};
+            const statusBadge = status === 'vigente'
+              ? 'badge-success'
+              : status === 'vencido'
+                ? 'badge-warning'
+                : status === 'no-presenta'
+                  ? 'badge-secondary'
+                  : 'badge-secondary';
+            const statusLabel = status ? status.replace('-', ' ') : 'Sin verificar';
+            const disabled = estaPresente ? '' : 'disabled';
+
+            return `
+              <div class="list-item">
+                <div class="list-item-header">
+                  <div class="list-item-title">${persona.nombre}</div>
+                  <div class="flex gap-2" style="align-items: center;">
+                    <span class="badge ${estaPresente ? 'badge-success' : 'badge-secondary'}">${estaPresente ? 'Presente' : 'No verificado'}</span>
+                    <span class="badge ${statusBadge}">Carnet: ${statusLabel}</span>
+                  </div>
+                </div>
+                <div class="list-item-content">
+                  DNI: ${persona.dni} - ${persona.cat_descrip || 'Cargo no especificado'}
+                </div>
+                <div class="list-item-actions" style="flex-wrap: wrap;">
+                  <button class="btn ${status === 'vigente' ? 'btn-success' : 'btn-outline'}"
+                          onclick="updateCarnetStatus('${persona.dni}', 'vigente')"
+                         ${disabled}>
+                    <i data-lucide="check-circle"></i> Vigente
+                  </button>
+                  <button class="btn ${status === 'vencido' ? 'btn-warning' : 'btn-outline'}"
+                          onclick="updateCarnetStatus('${persona.dni}', 'vencido')"
+                         ${disabled}>
+                    <i data-lucide="alert-triangle"></i> Vencido
+                  </button>
+                  <button class="btn ${status === 'no-presenta' ? 'btn-secondary' : 'btn-outline'}"
+                          onclick="updateCarnetStatus('${persona.dni}', 'no-presenta')"
+                         ${disabled}>
+                    <i data-lucide="x-circle"></i> No presenta
+                  </button>
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                  <label class="form-label">Número de carnet</label>
+                  <input type="text" class="form-control"
+                         placeholder="Ingrese el número de carnet"
+                         value="${detalle.numero || ''}"
+                         oninput="updateCarnetDetalle('${persona.dni}', 'numero', this.value)"
+                         ${disabled}>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fecha de vencimiento</label>
+                  <input type="date" class="form-control"
+                         value="${detalle.vencimiento || ''}"
+                         onchange="updateCarnetDetalle('${persona.dni}', 'vencimiento', this.value)"
+                         ${disabled}>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Observaciones</label>
+                  <textarea class="form-control textarea"
+                            placeholder="Notas adicionales sobre el carnet"
+                            oninput="updateCarnetDetalle('${persona.dni}', 'observaciones', this.value)"
+                            ${disabled}>${detalle.observaciones || ''}</textarea>
+                </div>
               </div>
-              <div class="list-item-content">
-                DNI: ${persona.dni} - ${persona.cat_descrip || 'Cargo no especificado'}
-              </div>
-              <div class="list-item-actions">
-                <button class="btn ${wizardData.carnetsVerificados[persona.dni] === 'vigente' ? 'btn-success' : 'btn-outline'}"
-                        onclick="updateCarnetStatus('${persona.dni}', 'vigente')"
-                       ${wizardData.personalVerificado[persona.dni] !== 'presente' ? 'disabled' : ''}>
-                  <i data-lucide="check-circle"></i> Vigente
-                </button>
-                <button class="btn ${wizardData.carnetsVerificados[persona.dni] === 'vencido' ? 'btn-warning' : 'btn-outline'}"
-                        onclick="updateCarnetStatus('${persona.dni}', 'vencido')"
-                       ${wizardData.personalVerificado[persona.dni] !== 'presente' ? 'disabled' : ''}>
-                  <i data-lucide="alert-triangle"></i> Vencido
-                </button>
-                <button class="btn ${wizardData.carnetsVerificados[persona.dni] === 'no-presenta' ? 'btn-destructive' : 'btn-outline'}"
-                        onclick="updateCarnetStatus('${persona.dni}', 'no-presenta')"
-                       ${wizardData.personalVerificado[persona.dni] !== 'presente' ? 'disabled' : ''}>
-                  <i data-lucide="x-circle"></i> No presenta
-                </button>
-              </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       `;
-      
+
       // Initialize icons
       setTimeout(() => {
         if (typeof lucide !== 'undefined') {
@@ -2601,6 +3511,8 @@
 
     function updateCarnetStatus(dni, status) {
       wizardData.carnetsVerificados[dni] = status;
+      ensureCarnetDetalle(dni);
+      saveWizardState();
       loadCarnetsStep(); // Refresh the display
     }
 
@@ -2615,7 +3527,7 @@
               <div class="evaluation-description">${criteria.description}</div>
             </div>
           </div>
-          
+
           <div class="evaluation-actions">
             <button class="btn ${wizardData.evaluaciones[criteria.id] === 'conforme' ? 'btn-success' : 'btn-outline'}"
                     onclick="updateEvaluacion('${criteria.id}', 'conforme')">
@@ -2629,12 +3541,16 @@
                     onclick="updateEvaluacion('${criteria.id}', 'no-aplica')">
               <i data-lucide="minus"></i> No Aplica
             </button>
+            <button class="btn btn-secondary"
+                    onclick="openCameraForEvaluation('${criteria.id}', '${encodeURIComponent(criteria.title)}')">
+              <i data-lucide="camera"></i> Registrar evidencia
+            </button>
           </div>
-          
+
           <div class="evaluation-notes">
             <textarea class="form-control textarea"
                       placeholder="Observaciones para ${criteria.title}..."
-                     onchange="updateEvaluacionNota('${criteria.id}', this.value)">${wizardData.evaluacionesNotas[criteria.id] || ''}</textarea>
+                     oninput="updateEvaluacionNota('${criteria.id}', this.value)">${wizardData.evaluacionesNotas[criteria.id] || ''}</textarea>
           </div>
         </div>
       `).join('');
@@ -2649,16 +3565,18 @@
 
     function updateEvaluacion(criteriaId, value) {
       wizardData.evaluaciones[criteriaId] = value;
+      saveWizardState();
       loadEvaluacionStep(); // Refresh the display
     }
 
     function updateEvaluacionNota(criteriaId, nota) {
       wizardData.evaluacionesNotas[criteriaId] = nota;
+      saveWizardState();
     }
 
     function loadEncuestaStep() {
       const container = document.getElementById('encuesta-content');
-      
+
       const encuestaPreguntas = [
         {
           id: 'satisfaccion-general',
@@ -2722,16 +3640,23 @@
 
     function updateEncuesta(preguntaId, valor) {
       wizardData.encuestas[preguntaId] = valor;
+      saveWizardState();
       loadEncuestaStep(); // Refresh the display
     }
 
     function loadFinalizarStep() {
       // Load consumos info
       const consumosContainer = document.getElementById('consumos-info');
-      
+
       // Get current operation data
       const operacion = userOperations.find(op => op.id === wizardData.operacionId);
-      
+      const fechaAuditoria = formatDateTime(wizardData.fechaHora, 'Sin fecha registrada');
+      const seguimientoFechaTexto = wizardData.seguimientoFecha ? formatDate(wizardData.seguimientoFecha, 'Sin definir') : 'Sin definir';
+      const recordatorioTexto = wizardData.seguimientoRecordatorio ? formatDateTime(wizardData.seguimientoRecordatorio, 'No programado') : 'No programado';
+      const fotos = Array.isArray(wizardData.fotos) ? wizardData.fotos : [];
+      const personalVerificadoCount = wizardData.personalVerificado ? Object.keys(wizardData.personalVerificado).length : 0;
+      const evaluacionesCount = wizardData.evaluaciones ? Object.keys(wizardData.evaluaciones).length : 0;
+
       consumosContainer.innerHTML = `
         <div class="card">
           <h3 class="card-title">Resumen de la Auditoría</h3>
@@ -2742,24 +3667,40 @@
             </div>
             <div class="report-item">
               <div class="report-item-label">Fecha y Hora</div>
-              <div class="report-item-value">${new Date(wizardData.fechaHora).toLocaleString('es-ES')}</div>
+              <div class="report-item-value">${fechaAuditoria}</div>
             </div>
             <div class="report-item">
               <div class="report-item-label">Auditor</div>
               <div class="report-item-value">${wizardData.usuarioNombre}</div>
             </div>
             <div class="report-item">
+              <div class="report-item-label">Turno</div>
+              <div class="report-item-value">${wizardData.turno || 'No definido'}</div>
+            </div>
+            <div class="report-item">
               <div class="report-item-label">Personal Verificado</div>
-              <div class="report-item-value">${Object.keys(wizardData.personalVerificado).length} personas</div>
+              <div class="report-item-value">${personalVerificadoCount} personas</div>
             </div>
             <div class="report-item">
               <div class="report-item-label">Evaluaciones</div>
-              <div class="report-item-value">${Object.keys(wizardData.evaluaciones).length} criterios</div>
+              <div class="report-item-value">${evaluacionesCount} criterios</div>
             </div>
             <div class="report-item">
               <div class="report-item-label">Fotos Tomadas</div>
-              <div class="report-item-value">${wizardData.fotos.length} fotos</div>
+              <div class="report-item-value">${fotos.length} fotos</div>
             </div>
+            ${wizardData.seguimientoRequerido === 'si' ? `
+              <div class="report-item">
+                <div class="report-item-label">Seguimiento</div>
+                <div class="report-item-value">${seguimientoFechaTexto} - Recordatorio: ${recordatorioTexto}</div>
+              </div>
+            ` : ''}
+            ${wizardData.otrasGestiones ? `
+              <div class="report-item" style="grid-column: 1 / -1;">
+                <div class="report-item-label">Otras Gestiones</div>
+                <div class="report-item-value">${wizardData.otrasGestiones}</div>
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
@@ -2769,11 +3710,61 @@
     }
 
     // Camera Functions
+    function updateCameraContextUI() {
+      const contextElement = document.getElementById('camera-context');
+      if (!contextElement) return;
+
+      const iconElement = contextElement.querySelector('i[data-lucide]');
+      const textElement = contextElement.querySelector('span');
+      const hasContext = currentPhotoContext && currentPhotoContext.label;
+
+      if (textElement) {
+        textElement.textContent = hasContext
+          ? `Capturando evidencia: ${currentPhotoContext.label}`
+          : 'Captura general de la auditoría';
+      }
+
+      if (iconElement) {
+        iconElement.setAttribute('data-lucide', hasContext ? 'target' : 'info');
+      }
+
+      setTimeout(() => {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }, 0);
+    }
+
+    function openCameraForEvaluation(criteriaId, encodedTitle) {
+      let label = '';
+      try {
+        label = decodeURIComponent(encodedTitle);
+      } catch (error) {
+        label = encodedTitle;
+      }
+
+      currentPhotoContext = {
+        type: 'evaluacion',
+        id: criteriaId,
+        label
+      };
+
+      updateCameraContextUI();
+
+      if (!cameraStream) {
+        abrirCamara();
+      } else {
+        showToast(`Capturando evidencia para ${label}`, 'info');
+      }
+    }
+
     function toggleCamera() {
       const container = document.getElementById('camera-container');
       const controls = document.getElementById('camera-controls');
-      
+
       if (container.style.display === 'none' || !container.style.display) {
+        currentPhotoContext = null;
+        updateCameraContextUI();
         abrirCamara();
       } else {
         cerrarCamara();
@@ -2786,7 +3777,7 @@
       const controls = document.getElementById('camera-controls');
       const overlay = document.getElementById('camera-overlay');
       
-      navigator.mediaDevices.getUserMedia({ 
+      navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'environment',
          width: { ideal: 1280 },
@@ -2799,8 +3790,13 @@
         container.style.display = 'block';
         controls.style.display = 'flex';
         overlay.style.display = 'none';
-        
-        showToast('Cámara activada', 'success');
+
+        updateCameraContextUI();
+
+        const contextMessage = currentPhotoContext && currentPhotoContext.label
+          ? ` para ${currentPhotoContext.label}`
+          : '';
+        showToast(`Cámara activada${contextMessage}`, 'success');
       })
       .catch(error => {
         console.error('Error accessing camera:', error);
@@ -2817,10 +3813,12 @@
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
       }
-      
+
       container.style.display = 'none';
       controls.style.display = 'none';
       overlay.style.display = 'flex';
+      currentPhotoContext = null;
+      updateCameraContextUI();
     }
 
     function tomarFoto() {
@@ -2843,37 +3841,75 @@
             id: Date.now().toString(),
             data: e.target.result,
             timestamp: new Date().toISOString(),
-            step: currentStep
+            step: currentStep,
+            context: currentPhotoContext ? { ...currentPhotoContext } : null
           };
-          
+
+          if (!Array.isArray(wizardData.fotos)) {
+            wizardData.fotos = [];
+          }
+
           wizardData.fotos.push(photoData);
           updatePhotoGallery();
-          showToast('Foto capturada correctamente', 'success');
+          saveWizardState();
+          const contextMessage = photoData.context && photoData.context.label
+            ? ` para ${photoData.context.label}`
+            : '';
+          showToast(`Foto capturada${contextMessage}`, 'success');
         };
         reader.readAsDataURL(blob);
       }, 'image/jpeg', 0.8);
     }
 
+    function loadObservacionesStep() {
+      document.getElementById('observaciones-positivas').value = wizardData.observacionesPositivas || '';
+      document.getElementById('observaciones-mejoras').value = wizardData.observacionesMejoras || '';
+      document.getElementById('recomendaciones').value = wizardData.recomendaciones || '';
+      document.getElementById('otras-gestiones').value = wizardData.otrasGestiones || '';
+      document.getElementById('seguimiento-fecha').value = wizardData.seguimientoFecha || '';
+      document.getElementById('seguimiento-recordatorio').value = wizardData.seguimientoRecordatorio || '';
+      document.getElementById('seguimiento-motivo').value = wizardData.seguimientoMotivo || '';
+      applySeguimientoUI();
+    }
+
+    function loadContactoStep() {
+      document.getElementById('contacto-nombre').value = wizardData.contactoNombre || '';
+      document.getElementById('contacto-cargo').value = wizardData.contactoCargo || '';
+      document.getElementById('contacto-observaciones').value = wizardData.contactoObservaciones || '';
+      document.getElementById('no-contacto-motivo').value = wizardData.noContactoMotivo || '';
+      document.getElementById('no-contacto-observaciones').value = wizardData.noContactoObservaciones || '';
+      applyContactoUI();
+    }
+
     function updatePhotoGallery() {
       const gallery = document.getElementById('photo-gallery');
       const noPhotosMessage = document.getElementById('no-photos-message');
-      
-      if (wizardData.fotos.length === 0) {
+      const fotos = Array.isArray(wizardData.fotos) ? wizardData.fotos : [];
+
+      if (fotos.length === 0) {
         gallery.innerHTML = '';
         noPhotosMessage.style.display = 'block';
         return;
       }
-      
+
       noPhotosMessage.style.display = 'none';
-      gallery.innerHTML = wizardData.fotos.map(foto => `
+      gallery.innerHTML = fotos.map(foto => {
+        const fechaFoto = formatDateTime(foto.timestamp, 'Sin fecha');
+        const etiqueta = foto.context && foto.context.label ? foto.context.label : '';
+        return `
         <div class="photo-item">
           <img src="${foto.data}" alt="Foto de auditoría">
           <button class="delete-btn" onclick="eliminarFoto('${foto.id}')">
             <i data-lucide="x"></i>
           </button>
+          <div class="photo-meta">
+            ${etiqueta ? `<span class="badge badge-info">${etiqueta}</span>` : '<span></span>'}
+            <span>${fechaFoto}</span>
+          </div>
         </div>
-      `).join('');
-      
+      `;
+      }).join('');
+
       // Initialize icons
       setTimeout(() => {
         if (typeof lucide !== 'undefined') {
@@ -2886,16 +3922,27 @@
       if (confirm('¿Está seguro que desea eliminar esta foto?')) {
         wizardData.fotos = wizardData.fotos.filter(foto => foto.id !== fotoId);
         updatePhotoGallery();
+        saveWizardState();
         showToast('Foto eliminada', 'success');
       }
     }
 
     // Finalize audit
     function finalizarAuditoria() {
+      if (!wizardData.turno) {
+        showToast('Seleccione un turno válido antes de finalizar la auditoría', 'error');
+        return;
+      }
+
+      if (!isTurnoEnHorario(wizardData.turno)) {
+        showToast('No se puede finalizar la auditoría fuera del horario del turno seleccionado', 'error');
+        return;
+      }
+
       if (!confirm('¿Está seguro que desea finalizar la auditoría? Esta acción no se puede deshacer.')) {
         return;
       }
-      
+
       showLoading();
       
       // Get current location
@@ -2929,7 +3976,9 @@
       database.ref(`auditorias/${auditoriaId}`).set(auditoriaData)
         .then(() => {
           hideLoading();
-          
+          clearWizardState();
+          resetWizard();
+
           Swal.fire({
             title: '¡Auditoría Completada!',
             text: 'La auditoría se ha guardado correctamente',
@@ -2954,36 +4003,68 @@
 
     function mostrarResumenAuditoria(auditoriaId, auditoriaData) {
       const operacion = userOperations.find(op => op.id === auditoriaData.operacionId);
+      const personalList = Array.isArray(auditoriaData.personal) ? auditoriaData.personal : [];
+      const fotos = Array.isArray(auditoriaData.fotos) ? auditoriaData.fotos : [];
+      const fechaAuditoria = formatDateTime(auditoriaData.fechaHora, 'Sin fecha registrada');
+      const seguimientoFechaTexto = auditoriaData.seguimientoFecha ? formatDate(auditoriaData.seguimientoFecha, 'Sin definir') : 'Sin definir';
+      const recordatorioTexto = auditoriaData.seguimientoRecordatorio ? formatDateTime(auditoriaData.seguimientoRecordatorio, 'No programado') : 'No programado';
       
       Swal.fire({
         title: 'Resumen de Auditoría',
         html: `
           <div style="text-align: left; max-height: 400px; overflow-y: auto;">
             <h4>${auditoriaData.operacionName}</h4>
-            <p><strong>Fecha:</strong> ${new Date(auditoriaData.fechaHora).toLocaleString('es-ES')}</p>
+            <p><strong>Fecha:</strong> ${fechaAuditoria}</p>
             <p><strong>Auditor:</strong> ${auditoriaData.usuarioNombre}</p>
-            
+            <p><strong>Turno:</strong> ${auditoriaData.turno || 'No definido'}</p>
+
             <h5>Personal Verificado:</h5>
             <ul>
-              ${Object.keys(auditoriaData.personalVerificado).map(dni => {
-                const persona = auditoriaData.personal.find(p => p.dni === dni);
-                const nombre = auditoriaData.personalNombres[dni] || (persona ? `${persona.nombre}` : dni);
-                return `<li>${nombre}: ${auditoriaData.personalVerificado[dni]}</li>`;
+              ${Object.keys(auditoriaData.personalVerificado || {}).map(dni => {
+                const persona = personalList.find(p => p.dni === dni);
+                const nombre = auditoriaData.personalNombres?.[dni] || (persona ? persona.nombre : dni);
+                const estado = auditoriaData.personalVerificado[dni];
+                if (estado === 'ausente') {
+                  const ausencia = (auditoriaData.personalAusencias || {})[dni] || {};
+                  const reemplazo = ausencia.reemplazado === 'si' ? ` - Reemplazado por ${ausencia.reemplazante || 'sin detalle'}` : ausencia.reemplazado === 'no' ? ' - Sin reemplazo' : '';
+                  const observacion = ausencia.observacion ? ` - Obs: ${ausencia.observacion}` : '';
+                  return `<li>${nombre}: Ausente${observacion}${reemplazo}</li>`;
+                }
+                return `<li>${nombre}: Presente</li>`;
               }).join('')}
             </ul>
-            
+
+            <h5>Carnets Sanitarios:</h5>
+            <ul>
+              ${Object.keys(auditoriaData.carnetsVerificados || {}).map(dni => {
+                const persona = personalList.find(p => p.dni === dni);
+                const nombre = persona ? persona.nombre : dni;
+                const estado = auditoriaData.carnetsVerificados[dni];
+                const detalle = (auditoriaData.carnetsDetalles || {})[dni] || {};
+                const extras = estado === 'no-presenta'
+                  ? (detalle.observaciones ? ` - Obs: ${detalle.observaciones}` : '')
+                  : ` - Nº ${detalle.numero || 's/d'} - Vence: ${formatDate(detalle.vencimiento, 's/d')}${detalle.observaciones ? ` - Obs: ${detalle.observaciones}` : ''}`;
+                return `<li>${nombre}: ${estado}${extras}</li>`;
+              }).join('')}
+            </ul>
+
             <h5>Evaluaciones:</h5>
             <ul>
-              ${Object.keys(auditoriaData.evaluaciones).map(criteriaId => {
+              ${Object.keys(auditoriaData.evaluaciones || {}).map(criteriaId => {
                 const criteria = evaluationCriteria.find(c => c.id === criteriaId);
                 return `<li>${criteria ? criteria.title : criteriaId}: ${auditoriaData.evaluaciones[criteriaId]}</li>`;
               }).join('')}
             </ul>
-            
-            <p><strong>Fotos tomadas:</strong> ${auditoriaData.fotos.length}</p>
-            
-            ${auditoriaData.seguimientoRequerido === 'si' ? 
-              `<p><strong>Seguimiento requerido:</strong> ${auditoriaData.seguimientoFecha}</p>` : 
+
+            ${auditoriaData.observacionesPositivas ? `<p><strong>Aspectos positivos:</strong> ${auditoriaData.observacionesPositivas}</p>` : ''}
+            ${auditoriaData.observacionesMejoras ? `<p><strong>Oportunidades de mejora:</strong> ${auditoriaData.observacionesMejoras}</p>` : ''}
+            ${auditoriaData.recomendaciones ? `<p><strong>Recomendaciones:</strong> ${auditoriaData.recomendaciones}</p>` : ''}
+            ${auditoriaData.otrasGestiones ? `<p><strong>Otras gestiones:</strong> ${auditoriaData.otrasGestiones}</p>` : ''}
+
+            <p><strong>Fotos tomadas:</strong> ${fotos.length}</p>
+
+            ${auditoriaData.seguimientoRequerido === 'si' ?
+              `<p><strong>Seguimiento:</strong> ${seguimientoFechaTexto} - Recordatorio: ${recordatorioTexto}</p>` :
               ''
             }
           </div>
@@ -3106,18 +4187,51 @@ function mostrarDetalleAuditoria(auditoria) {
   const personalVerificado = auditoria.personalVerificado || {};
   const personal = auditoria.personal || [];
   const carnets = auditoria.carnetsVerificados || {};
+  const ausencias = auditoria.personalAusencias || {};
+  const carnetsDetalles = auditoria.carnetsDetalles || {};
 
   const filas = Object.keys(personalVerificado).map(dni => {
     const persona = personal.find(p => String(p.dni) === String(dni));
     const nombre = persona ? persona.nombre : dni;
     const status = personalVerificado[dni];
     const carnet = carnets[dni] || 'No verificado';
+    const ausencia = ausencias[dni] || {};
+    const carnetDetalle = carnetsDetalles[dni] || {};
+
+    const detalleParts = [];
+    if (status === 'ausente') {
+      if (ausencia.observacion) {
+        detalleParts.push(`Ausencia: ${ausencia.observacion}`);
+      }
+      if (ausencia.reemplazado) {
+        detalleParts.push(`Reemplazo: ${ausencia.reemplazado === 'si' ? (ausencia.reemplazante || 'sin detalle') : 'No'}`);
+      }
+    }
+
+    if (carnet === 'vigente' || carnet === 'vencido') {
+      if (carnetDetalle.numero) {
+        detalleParts.push(`Carnet Nº ${carnetDetalle.numero}`);
+      }
+      if (carnetDetalle.vencimiento) {
+        detalleParts.push(`Vence: ${new Date(carnetDetalle.vencimiento).toLocaleDateString('es-ES')}`);
+      }
+    } else if (carnet === 'no-presenta' && carnetDetalle.observaciones) {
+      detalleParts.push(`Carnet: ${carnetDetalle.observaciones}`);
+    }
+
+    const carnetBadge = carnet === 'vigente'
+      ? 'badge-success'
+      : carnet === 'vencido'
+        ? 'badge-warning'
+        : 'badge-secondary';
+
     return `
       <tr>
         <td>${nombre}</td>
         <td>${dni}</td>
         <td><span class="badge ${status === 'presente' ? 'badge-success' : 'badge-secondary'}">${status}</span></td>
-        <td><span class="badge ${carnet === 'vigente' ? 'badge-success' : carnet === 'vencido' ? 'badge-warning' : 'badge-destructive'}">${carnet}</span></td>
+        <td><span class="badge ${carnetBadge}">${carnet}</span></td>
+        <td>${detalleParts.length > 0 ? detalleParts.join(' | ') : '-'}</td>
       </tr>
     `;
   }).join('');
@@ -3127,12 +4241,13 @@ function mostrarDetalleAuditoria(auditoria) {
 
   const fotosHtml = (auditoria.fotos && auditoria.fotos.length > 0)
     ? `
-      <div style="margin-top: 1rem;">
+      <div style=\"margin-top: 1rem;\">
         <h5>Fotos Tomadas:</h5>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;">
-          ${auditoria.fotos.map(url => `
-            <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden;">
-              <img src="${url.data}" alt="Foto auditoría" style="width: 100%; height: auto; display: block;" />
+        <div style=\"display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;\">
+          ${auditoria.fotos.map(foto => `
+            <div style=\"border: 1px solid #ddd; border-radius: 6px; overflow: hidden;\">
+              <img src=\"${foto.data}\" alt=\"Foto auditoría\" style=\"width: 100%; height: auto; display: block;\" />
+              ${foto.context && foto.context.label ? `<div style=\"padding: 0.5rem; font-size: 0.75rem; background: #f5f5f5;\">${foto.context.label}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -3146,9 +4261,10 @@ function mostrarDetalleAuditoria(auditoria) {
       <div style="text-align: left; max-height: 500px; overflow-y: auto;">
         <div style="margin-bottom: 1rem;">
           <strong>Fecha:</strong> ${new Date(auditoria.fechaHora).toLocaleString('es-ES')}<br>
-          <strong>Auditor:</strong> ${auditoria.usuarioNombre}
+          <strong>Auditor:</strong> ${auditoria.usuarioNombre}<br>
+          <strong>Turno:</strong> ${auditoria.turno || 'No definido'}
         </div>
-        
+
         <h5>Personal Verificado:</h5>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem;">
           <thead>
@@ -3157,13 +4273,14 @@ function mostrarDetalleAuditoria(auditoria) {
               <th style="border: 1px solid #ddd; padding: 8px;">DNI</th>
               <th style="border: 1px solid #ddd; padding: 8px;">Estado</th>
               <th style="border: 1px solid #ddd; padding: 8px;">Carnet</th>
+              <th style="border: 1px solid #ddd; padding: 8px;">Detalle</th>
             </tr>
           </thead>
           <tbody>
             ${filas}
           </tbody>
         </table>
-        
+
         <h5>Evaluaciones:</h5>
         <ul>
           ${Object.keys(auditoria.evaluaciones || {}).map(criteriaId => {
@@ -3175,6 +4292,8 @@ function mostrarDetalleAuditoria(auditoria) {
         ${auditoria.observacionesPositivas ? `<h5>Aspectos Positivos:</h5><p>${auditoria.observacionesPositivas}</p>` : ''}
         ${auditoria.observacionesMejoras ? `<h5>Oportunidades de Mejora:</h5><p>${auditoria.observacionesMejoras}</p>` : ''}
         ${auditoria.recomendaciones ? `<h5>Recomendaciones:</h5><p>${auditoria.recomendaciones}</p>` : ''}
+        ${auditoria.otrasGestiones ? `<h5>Otras Gestiones:</h5><p>${auditoria.otrasGestiones}</p>` : ''}
+        ${auditoria.seguimientoRequerido === 'si' ? `<h5>Seguimiento:</h5><p>${new Date(auditoria.seguimientoFecha).toLocaleDateString('es-ES')} - Recordatorio: ${auditoria.seguimientoRecordatorio ? new Date(auditoria.seguimientoRecordatorio).toLocaleString('es-ES') : 'No programado'}</p>` : ''}
 
         ${fotosHtml}
       </div>
@@ -3360,13 +4479,25 @@ function mostrarDetalleAuditoria(auditoria) {
     function generarPDFReporte(auditoria) {
       const operacion = userOperations.find(op => op.id === auditoria.operacionId);
       const operacionNombre = operacion ? operacion.nombre : 'Comedor no encontrado';
-      
+      const personalList = Array.isArray(auditoria.personal) ? auditoria.personal : [];
+      const fotos = Array.isArray(auditoria.fotos) ? auditoria.fotos : [];
+      const fechaAuditoria = formatDateTime(auditoria.fechaHora, 'Sin fecha registrada');
+      const seguimientoFechaTexto = auditoria.seguimientoFecha ? formatDate(auditoria.seguimientoFecha, 'Sin definir') : 'Sin definir';
+      const recordatorioTexto = auditoria.seguimientoRecordatorio ? formatDateTime(auditoria.seguimientoRecordatorio, 'No programado') : 'No programado';
+      const turnoTexto = auditoria.turno || 'No definido';
+      const otrasGestiones = (auditoria.otrasGestiones || '').trim();
+
       // Create a new window for the report
       const reportWindow = window.open('', '_blank');
-      
+      if (!reportWindow) {
+        showToast('Habilita las ventanas emergentes para ver el reporte', 'error');
+        return;
+      }
+
       // Calculate stats
-      const personalPresente = Object.values(auditoria.personalVerificado || {}).filter(status => status === 'presente').length;
-      const totalPersonal = Object.keys(auditoria.personalVerificado || {}).length;
+      const verificaciones = auditoria.personalVerificado || {};
+      const personalPresente = Object.keys(verificaciones).filter(dni => verificaciones[dni] === 'presente').length;
+      const totalPersonal = personalList.length || Object.keys(verificaciones).length;
       const evaluacionesConformes = Object.values(auditoria.evaluaciones || {}).filter(eval => eval === 'conforme').length;
       const totalEvaluaciones = Object.keys(auditoria.evaluaciones || {}).length;
       
@@ -3451,12 +4582,19 @@ function mostrarDetalleAuditoria(auditoria) {
               border-collapse: collapse;
               margin-bottom: 20px;
             }
-            .table th,
-            .table td {
-              border: 1px solid #ddd;
-              padding: 12px;
-              text-align: left;
-            }
+    .table th,
+    .table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+
+    .table-note {
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: #555;
+      line-height: 1.4;
+    }
             .table th {
               background-color: #f8f9fa;
               font-weight: bold;
@@ -3542,11 +4680,15 @@ function mostrarDetalleAuditoria(auditoria) {
               </div>
               <div class="info-item">
                 <div class="info-label">Fecha y Hora</div>
-                <div class="info-value">${new Date(auditoria.fechaHora).toLocaleString('es-ES')}</div>
+                <div class="info-value">${fechaAuditoria}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">Auditor</div>
                 <div class="info-value">${auditoria.usuarioNombre}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Turno</div>
+                <div class="info-value">${turnoTexto}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">Estado</div>
@@ -3556,6 +4698,16 @@ function mostrarDetalleAuditoria(auditoria) {
                   </span>
                 </div>
               </div>
+              ${auditoria.seguimientoRequerido === 'si' ? `
+                <div class="info-item">
+                  <div class="info-label">Seguimiento</div>
+                  <div class="info-value">${seguimientoFechaTexto}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Recordatorio</div>
+                  <div class="info-value">${recordatorioTexto}</div>
+                </div>
+              ` : ''}
             </div>
           </div>
 
@@ -3576,7 +4728,7 @@ function mostrarDetalleAuditoria(auditoria) {
               </div>
               <div class="info-item">
                 <div class="info-label">Fotos Tomadas</div>
-                <div class="info-value">${(auditoria.fotos || []).length}</div>
+                <div class="info-value">${fotos.length}</div>
               </div>
             </div>
           </div>
@@ -3610,11 +4762,21 @@ function mostrarDetalleAuditoria(auditoria) {
               </thead>
               <tbody>
                 ${Object.keys(auditoria.personalVerificado || {}).map(dni => {
-                  const persona = (auditoria.personal || []).find(p => String(p.dni) === String(dni));
-                  const nombre = auditoria.personalNombres[dni] || (persona ? `${persona.nombre}` : dni);
+                  const persona = personalList.find(p => String(p.dni) === String(dni));
+                  const nombre = (auditoria.personalNombres && auditoria.personalNombres[dni]) || (persona ? `${persona.nombre}` : dni);
                   const status = auditoria.personalVerificado[dni];
                   const carnet = (auditoria.carnetsVerificados || {})[dni] || 'No verificado';
-                  
+                  const carnetDetalle = (auditoria.carnetsDetalles || {})[dni] || {};
+                  const ausencia = (auditoria.personalAusencias || {})[dni] || {};
+
+                  const observacionTexto = status === 'ausente'
+                    ? `${ausencia.observacion && ausencia.observacion.trim() ? ausencia.observacion : 'Sin observaciones'}${ausencia.reemplazado ? `<br>${ausencia.reemplazado === 'si' ? `Reemplazo: ${ausencia.reemplazante || 'Sin detalle'}` : 'Sin reemplazo'}` : ''}`
+                    : '';
+
+                  const carnetDetalleTexto = carnet === 'no-presenta'
+                    ? (carnetDetalle.observaciones || 'Sin observaciones')
+                    : `Nº ${carnetDetalle.numero || 's/d'} - Vence: ${formatDate(carnetDetalle.vencimiento, 's/d')}${carnetDetalle.observaciones ? `<br>Obs: ${carnetDetalle.observaciones}` : ''}`;
+
                   return `
                     <tr>
                       <td>${nombre}</td>
@@ -3623,11 +4785,13 @@ function mostrarDetalleAuditoria(auditoria) {
                         <span class="badge ${status === 'presente' ? 'badge-success' : 'badge-secondary'}">
                           ${status}
                         </span>
+                        ${observacionTexto ? `<div class="table-note">${observacionTexto}</div>` : ''}
                       </td>
                       <td>
-                        <span class="badge ${carnet === 'vigente' ? 'badge-success' : carnet === 'vencido' ? 'badge-warning' : 'badge-danger'}">
+                        <span class="badge ${carnet === 'vigente' ? 'badge-success' : carnet === 'vencido' ? 'badge-warning' : carnet === 'no-presenta' ? 'badge-secondary' : 'badge-danger'}">
                           ${carnet}
                         </span>
+                        ${(status === 'presente' || carnet === 'no-presenta') ? `<div class="table-note">${carnetDetalleTexto}</div>` : ''}
                       </td>
                     </tr>
                   `;
@@ -3700,7 +4864,7 @@ function mostrarDetalleAuditoria(auditoria) {
           </div>
           ` : ''}
 
-          ${auditoria.observacionesPositivas || auditoria.observacionesMejoras || auditoria.recomendaciones ? `
+          ${auditoria.observacionesPositivas || auditoria.observacionesMejoras || auditoria.recomendaciones || otrasGestiones ? `
           <div class="section">
             <div class="section-title">Observaciones Generales</div>
             ${auditoria.observacionesPositivas ? `
@@ -3721,6 +4885,12 @@ function mostrarDetalleAuditoria(auditoria) {
                 <p>${auditoria.recomendaciones}</p>
               </div>
             ` : ''}
+            ${otrasGestiones ? `
+              <div style="margin-bottom: 15px;">
+                <strong>Otras Gestiones:</strong>
+                <p>${otrasGestiones}</p>
+              </div>
+            ` : ''}
           </div>
           ` : ''}
 
@@ -3730,7 +4900,7 @@ function mostrarDetalleAuditoria(auditoria) {
             <div class="info-grid">
               <div class="info-item">
                 <div class="info-label">Fecha Sugerida</div>
-                <div class="info-value">${new Date(auditoria.seguimientoFecha).toLocaleDateString('es-ES')}</div>
+                <div class="info-value">${seguimientoFechaTexto}</div>
               </div>
               <div class="info-item">
                 <div class="info-label">Motivo</div>
@@ -3740,13 +4910,17 @@ function mostrarDetalleAuditoria(auditoria) {
           </div>
           ` : ''}
 
-          ${(auditoria.fotos || []).length > 0 ? `
+          ${fotos.length > 0 ? `
           <div class="section">
-            <div class="section-title">Galería de Fotos (${auditoria.fotos.length})</div>
+            <div class="section-title">Galería de Fotos (${fotos.length})</div>
             <div class="photos-grid">
-              ${auditoria.fotos.map((foto, index) => `
+              ${fotos.map((foto, index) => `
                 <div class="photo-item">
                   <img src="${foto.data}" alt="Foto ${index + 1}">
+                  <div style="padding: 8px; font-size: 12px; color: #555; background: #f8f9fa;">
+                    ${foto.context && foto.context.label ? foto.context.label : 'Evidencia general'}<br>
+                    <strong>${formatDateTime(foto.timestamp, 'Sin fecha')}</strong>
+                  </div>
                 </div>
               `).join('')}
             </div>
